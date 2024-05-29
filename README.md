@@ -22,16 +22,16 @@ To log results during fine-tuning and evaluation, you'll also want an account wi
 Please cite the following version of the Lab-Scale AI paper, from the ACM FAccT proceedings:
 
 > @article{wolfe2024lab-scale,\
->  title={Laboratory-Scale AI: Open-Weight Models are Competitive with ChatGPT Even in Low-Resource Settings},\
->  author={Wolfe, Robert and Slaughter, Isaac and Han, Bin and Wen, Bingbing and Yang, Yiwei and Rosenblatt, Lucas and Herman, Bernease and Brown, Eva and Qu, Zening and Weber, Nic and Howe, Bill},\
->  journal={arXiv preprint arXiv:2405.16820},\
->  year={2024}\
+>  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;title={Laboratory-Scale AI: Open-Weight Models are Competitive with ChatGPT Even in Low-Resource Settings},\
+>  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;author={Wolfe, Robert and Slaughter, Isaac and Han, Bin and Wen, Bingbing and Yang, Yiwei and Rosenblatt, Lucas and Herman, Bernease and Brown, Eva and Qu, Zening and Weber, Nic and Howe, Bill},\
+>  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;journal={arXiv preprint arXiv:2405.16820},\
+>  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;year={2024}\
 > }
 
 ### 5. Other Resources
 
 This repository is primarily a reference implementation intended for reproducibility, insofar as that's possible given the stochasticity of the models and the black box character of evaluating closed models. However, this also means that our repo might not be the best starting place for everyone who wants to customize their own open models. There are many great resources for using the technologies employed in the paper, some of which are more geared toward newer users. Some resources we found helpful include:
 
-- [https://huggingface.co/docs/trl/en/sft_trainer](**TRL-Library-SFT-Trainer**): One of the most straightforward ways to fine-tune an open chatbot, with clear explanations and code examples.
-- [https://github.com/artidoro/qlora](**qLoRA-Library**): Repository for the qLoRA technology that enables quantized language models to be fine-tuned with insertable weight matrices. Includes helpful colab demos.
-- [https://wandb.ai/sauravmaheshkar/QLoRA/reports/What-is-QLoRA---Vmlldzo2MTI2OTc5](**W&B-qLoRA-Tutorial**): Includes colab notebook and detailed walkthrough of technical characteristics with W&B integration.
+- [https://huggingface.co/docs/trl/en/sft_trainer](**TRL-Library-SFT-Trainer**): The TRL library's SFT trainer, one of the most straightforward ways to fine-tune an open chatbot, with clear explanations and code examples.
+- [https://github.com/artidoro/qlora](**qLoRA-Library**): The official repository for the qLoRA technology that enables quantized language models to be fine-tuned with insertable weight matrices. Includes helpful colab demos.
+- [https://wandb.ai/sauravmaheshkar/QLoRA/reports/What-is-QLoRA---Vmlldzo2MTI2OTc5](**W&B-qLoRA-Tutorial**): A Weights and Biases qLoRA tutorial; includes a colab notebook and detailed walkthrough of technical characteristics with W&B integration.
