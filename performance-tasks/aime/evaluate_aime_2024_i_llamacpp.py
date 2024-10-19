@@ -4,9 +4,8 @@ import json
 import argparse
 import torch
 import wandb
-from transformers import AutoModelForCausalLM, AutoTokenizer
-from generate_from_hf_model import generate_from_prompt
-from finetune import QUANZATION_MAP
+from llama_cpp import Llama
+from huggingface_hub import hf_hub_download
 
 from datasets import load_dataset
 from tqdm import tqdm
@@ -15,22 +14,34 @@ from os import path, makedirs, getenv
 import re
 from typing import Optional
 
-TEMPLATE = [
-    # from aime 2018 I
-    {"role": "system", "content": "After a user asks a question think about how to solve the problem. When asked to give an answer, reply with just a number. Each answer is an integer between 0 and 1000."},
-    {"role": "user", "content": "Let $S$ be the number of ordered pairs of integers $(a,b)$ with $1 \\leq a \\leq 100$ and $b \\geq 0$ such that the polynomial $x^2+ax+b$ can be factored into the product of two (not necessarily distinct) linear factors with integer coefficients. Find the remainder when $S$ is divided by $1000$."},
-    {"role": "assistant", "content": r"""Notice that for $x^2+ax+b$ to be true, for every $a$, $b$ will always be the product of the possibilities of how to add two integers to $a$. For example, if $a=3$, $b$ will be the product of $(3,0)$ and $(2,1)$, as those two sets are the only possibilities of adding two integers to $a$. Note that order does not matter. If we just do some simple casework, we find out that:
+TEMPLATES = {
+    "llama": """<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+[[SYSTEM_PROMPT]]<|eot_id|><|start_header_id|>user<|end_header_id|>
+Let $S$ be the number of ordered pairs of integers $(a,b)$ with $1 \\leq a \\leq 100$ and $b \\geq 0$ such that the polynomial $x^2+ax+b$ can be factored into the product of two (not necessarily distinct) linear factors with integer coefficients. Find the remainder when $S$ is divided by $1000$.
+Provide a single integer answer.<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+600<|eot_id|><|start_header_id|>user<|end_header_id|>
+In $\\triangle ABC, AB = AC = 10$ and $BC = 12$. Point $D$ lies strictly between $A$ and $B$ on $\\overline{AB}$ and point $E$ lies strictly between $A$ and $C$ on $\\overline{AC}$ so that $AD = DE = EC$. Then $AD$ can be expressed in the form $\\dfrac{p}{q}$, where $p$ and $q$ are relatively prime positive integers. Find $p+q$.
+Provide a single integer answer.<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+289<|eot_id|><|start_header_id|>user<|end_header_id|>
+[[USER_PROMPT]]<|eot_id|><|start_header_id|>assistant<|end_header_id|>""",
+    "gemma": """<start_of_turn>system
+[[SYSTEM_PROMPT]]<end_of_turn>
+<start_of_turn>user
+Let $S$ be the number of ordered pairs of integers $(a,b)$ with $1 \\leq a \\leq 100$ and $b \\geq 0$ such that the polynomial $x^2+ax+b$ can be factored into the product of two (not necessarily distinct) linear factors with integer coefficients. Find the remainder when $S$ is divided by $1000$.
+Provide a single integer answer.<end_of_turn>
+<start_of_turn>assistant
+600<end_of_turn>
+<start_of_turn>user
+In $\\triangle ABC, AB = AC = 10$ and $BC = 12$. Point $D$ lies strictly between $A$ and $B$ on $\\overline{AB}$ and point $E$ lies strictly between $A$ and $C$ on $\\overline{AC}$ so that $AD = DE = EC$. Then $AD$ can be expressed in the form $\\dfrac{p}{q}$, where $p$ and $q$ are relatively prime positive integers. Find $p+q$.
+Provide a single integer answer.<end_of_turn>
+<start_of_turn>assistant
+289<end_of_turn>
+<start_of_turn>user
+[[USER_PROMPT]]<end_of_turn>
+<start_of_turn>model""",
+}
 
-if $a$ is odd, there will always be $\left\lceil\frac{a}{2}\right\rceil$ $\left(\text{which is also }\frac{a+1}{2}\right)$ possibilities of adding two integers to $a$.
-
-if $a$ is even, there will always be $\frac{a}{2}+1$ possibilities of adding two integers to $a$.
-
-Using the casework, we have $1+2+2+3+3+...50+50+51$ possibilities. This will mean that the answer is \[\frac{(1+51)\cdot100}{2}\Rightarrow52\cdot50=2600\] possibilities.
-
-Thus, our solution is $2600\bmod {1000}\equiv 600$."""},
-    {"role": "user", "content": "What is the final answer?"},
-    {"role": "assistant", "content": "600"},
-]
+SYSTEM_PROMPT = """Give answers to user's questions using single numbers. Each answer is an integer between 0 and 1000."""
 
 #####
 # TODO: Below is partially adapted better answer parsing from
@@ -145,8 +156,8 @@ def compute_exact(a_gold, a_pred):
 
 
 def evaluate_hf_model_aime(
-    model: AutoModelForCausalLM,
-    tokenizer: AutoTokenizer,
+    llm: Llama,
+    model_template: str,
     data: Sequence[dict[str, str]],
     question_column: str = "input",
     answer_column: str = "output",
@@ -159,7 +170,7 @@ def evaluate_hf_model_aime(
     """
     Evaluate a Hugging Face model on a AIME 2024 I task.
     """
-    generation_kwargs = {"max_tokens": 900, start_prompt="", end_prompt=""}
+    generation_kwargs = {"max_tokens": 100, "stop": ["</s>"], "echo": False, "top_k": 1}
     exact_match: list[bool] = []
 
     for idx in tqdm(range(min(max_samples, len(data))), desc="Evaluating AIME model"):
@@ -167,19 +178,20 @@ def evaluate_hf_model_aime(
         ground_truth = str(data[idx][answer_column])
 
         # Generate and decode the output string, removing the special tokens and any suffixes
-        prompt = TEMPLATE + [{"role": "user", "content": question}]
-        input_data = tokenizer.apply_chat_template(prompt, tokenize=False, add_generation_prompt=True)
-        decoded = generate_from_prompt(model, tokenizer, input_data, **generation_kwargs)
-        
-        new_chat = list(prompt) + [{"role": "assistant", "content": decoded}, {"role": "user", "content": "What is the final answer?"}]
-        input_data = tokenizer.apply_chat_template(new_chat, tokenize=False, add_generation_prompt=True)
-        decoded = generate_from_prompt(model, tokenizer, input_data, **generation_kwargs)
+        user_prompt = f"{question}\nProvide a single integer answer."
+
+        prompt = model_template.replace("[[SYSTEM_PROMPT]]", SYSTEM_PROMPT).replace(
+            "[[USER_PROMPT]]", user_prompt
+        )
+
+        res = llm(prompt, **generation_kwargs)
+        decoded = res["choices"][0]["text"]
 
         print(f"{ground_truth = } -> {decoded = }")
 
         # Remove the suffix if specified - note that Mistral-Instruct models add a </s> suffix to specify the end of the output
-        if remove_suffix is not None and remove_suffix in decoded:
-            decoded = decoded.split(remove_suffix)[0]
+        if remove_suffix is not None:
+            decoded = decoded.replace(remove_suffix, "")
 
         exact_match.append(compute_exact(decoded, ground_truth))
 
@@ -203,7 +215,19 @@ if __name__ == "__main__":
         "--hf_model_id",
         type=str,
         help="The Huggingface model to evaluate",
-        default="unsloth/Meta-Llama-3.1-8B",
+        default="SanctumAI/Meta-Llama-3.1-8B-Instruct-GGUF",
+    )
+    parser.add_argument(
+        "--hf_gguf_file",
+        type=str,
+        help="The Huggingface model's gguf filename (if loading a gguf)",
+        default="meta-llama-3.1-8b-instruct.Q4_K_M.gguf",
+    )
+    parser.add_argument(
+        "--model_template",
+        type=str,
+        help="The template for the model's chat",
+        default="llama",
     )
 
     # Dataset arguments
@@ -211,7 +235,7 @@ if __name__ == "__main__":
         "--max_samples",
         type=int,
         help="The maximum number of samples to evaluate",
-        default=100,
+        default=200,
     )
 
     # Generation arguments
@@ -277,17 +301,17 @@ if __name__ == "__main__":
     # Model evaluation logic based on the model type
     if args.model_type == "hf":
         model_id = args.hf_model_id
+        # Load the Hugging Face model and tokenizer
         print("Loading Hugging Face model: ", model_id)
-        tokenizer = AutoTokenizer.from_pretrained(model_id)
-        tokenizer.pad_token_id = tokenizer.eos_token_id
-        model = AutoModelForCausalLM.from_pretrained(model_id, quantization_config=QUANZATION_MAP['8bit'])
-        model.eval()
+        filename = args.hf_gguf_file
+        model_path = hf_hub_download(model_id, filename)
+        llm = Llama(model_path=model_path, n_ctx=1024, n_threads=32, n_gpu_layers=30)
 
         # Evaluate the Hugging Face model
         print("Evaluating Hugging Face model on AIME task: ", model_id)
         aime_metrics = evaluate_hf_model_aime(
-            model,
-            tokenizer,
+            llm,
+            TEMPLATES[args.model_template],
             data,
             question_column="question",
             answer_column="answer",
