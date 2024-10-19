@@ -23,13 +23,15 @@ RUN ln -sf /usr/bin/python3.11 /usr/bin/python3 \
     && ln -sf /usr/bin/pip3 /usr/bin/pip
 
 # Copy the current directory contents into the image
-COPY . /app
+COPY requirements.txt /app
 
 # Set the working directory
 WORKDIR /
 
 # Install all requirements
 RUN pip install -r /app/requirements.txt
+
+COPY . /app
 
 CMD ["/bin/bash", "/app/tasks/fact-checking.sh"]
 
