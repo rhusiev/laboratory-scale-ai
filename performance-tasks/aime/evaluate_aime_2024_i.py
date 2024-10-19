@@ -159,7 +159,7 @@ def evaluate_hf_model_aime(
     """
     Evaluate a Hugging Face model on a AIME 2024 I task.
     """
-    generation_kwargs = {"max_tokens": 900, start_prompt="", end_prompt=""}
+    generation_kwargs = {"max_tokens": 900, start_prompt: "", end_prompt: ""}
     exact_match: list[bool] = []
 
     for idx in tqdm(range(min(max_samples, len(data))), desc="Evaluating AIME model"):
