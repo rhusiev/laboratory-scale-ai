@@ -151,15 +151,12 @@ def evaluate_hf_model_aime(
     question_column: str = "input",
     answer_column: str = "output",
     max_samples: int = None,
-    min_new_tokens: int = 0,
-    max_new_tokens: int = 50,
     remove_suffix: str = None,
-    device: str = "cuda",
 ) -> dict:
     """
     Evaluate a Hugging Face model on a AIME 2024 I task.
     """
-    generation_kwargs = {"max_tokens": 900, "start_prompt": "", "end_prompt": ""}
+    generation_kwargs = {"max_tokens": 1200, "start_prompt": "", "end_prompt": ""}
     exact_match: list[bool] = []
 
     for idx in tqdm(range(min(max_samples, len(data))), desc="Evaluating AIME model"):
@@ -170,11 +167,13 @@ def evaluate_hf_model_aime(
         prompt = TEMPLATE + [{"role": "user", "content": question}]
         input_data = tokenizer.apply_chat_template(prompt, tokenize=False, add_generation_prompt=True)
         decoded = generate_from_prompt(model, tokenizer, input_data, **generation_kwargs)
-        
+
         new_chat = list(prompt) + [{"role": "assistant", "content": decoded}, {"role": "user", "content": "What is the final answer?"}]
         input_data = tokenizer.apply_chat_template(new_chat, tokenize=False, add_generation_prompt=True)
         decoded = generate_from_prompt(model, tokenizer, input_data, **generation_kwargs)
 
+        print("Chat")
+        print(new_chat)
         print(f"{ground_truth = } -> {decoded = }")
 
         # Remove the suffix if specified - note that Mistral-Instruct models add a </s> suffix to specify the end of the output
