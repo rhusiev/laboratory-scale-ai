@@ -42,8 +42,6 @@ DEFAULT_TRAINING_ARGS = TrainingArguments(
 def format_data_as_instructions(data: Mapping, 
                                 input_field: str='article', 
                                 target_field: str='highlights', 
-                                start_prompt: str=' ### Summarize the following: ', 
-                                end_prompt: str=' ### Begin summary: ', 
                                 suffix: str='') -> list[str]:
     """
     Formats text data as instructions for the model. Can be used as a formatting function for the trainer class.
@@ -55,7 +53,7 @@ def format_data_as_instructions(data: Mapping,
     for i in tqdm(range(len(data[input_field])), desc='Formatting data'):
 
         # Add the start and end prompts to the text, and append the suffix if provided
-        text = f'{start_prompt}{data[input_field][i]}{end_prompt}{data[target_field][i]}{suffix}'
+        text = f'{data[input_field][i]}{data[target_field][i]}{suffix}'
 
         output_texts.append(text)
 

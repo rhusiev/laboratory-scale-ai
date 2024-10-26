@@ -23,7 +23,7 @@ RUN ln -sf /usr/bin/python3.11 /usr/bin/python3 \
     && ln -sf /usr/bin/pip3 /usr/bin/pip
 
 # Copy the current directory contents into the image
-COPY requirements.txt /app
+COPY ./requirements.txt /app/requirements.txt
 
 # Set the working directory
 WORKDIR /
