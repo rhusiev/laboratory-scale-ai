@@ -17,7 +17,7 @@ from typing import Optional
 
 TEMPLATE = [
     # from aime 2018 I
-    {"role": "system", "content": "After a user asks a question think about how to solve the problem. When asked to give an answer, reply with just a number. Each answer is an integer between 0 and 1000."},
+    {"role": "system", "content": "After a user asks a question think about how to solve the problem. When asked to give a final answer, reply with a single number, without explanations. Each answer is an integer between 0 and 1000."},
     {"role": "user", "content": "Let $S$ be the number of ordered pairs of integers $(a,b)$ with $1 \\leq a \\leq 100$ and $b \\geq 0$ such that the polynomial $x^2+ax+b$ can be factored into the product of two (not necessarily distinct) linear factors with integer coefficients. Find the remainder when $S$ is divided by $1000$."},
     {"role": "assistant", "content": r"""Notice that for $x^2+ax+b$ to be true, for every $a$, $b$ will always be the product of the possibilities of how to add two integers to $a$. For example, if $a=3$, $b$ will be the product of $(3,0)$ and $(2,1)$, as those two sets are the only possibilities of adding two integers to $a$. Note that order does not matter. If we just do some simple casework, we find out that:
 
