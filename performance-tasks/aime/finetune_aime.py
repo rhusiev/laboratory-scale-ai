@@ -28,7 +28,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model_id",
         type=str,
-        default="mistralai/Mistral-7B-Instruct-v0.1",
+        default="meta-llama/Llama-3.1-8B-Instruct",
         help="The model ID to fine-tune.",
     )
     parser.add_argument(
