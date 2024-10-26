@@ -150,14 +150,16 @@ def evaluate_hf_model_aime(
     data: Sequence[dict[str, str]],
     question_column: str = "input",
     answer_column: str = "output",
+    max_new_tokens: int = 2400,
     max_samples: int = None,
     remove_suffix: str = None,
 ) -> dict:
     """
     Evaluate a Hugging Face model on a AIME 2024 I task.
     """
-    generation_kwargs = {"max_new_tokens": 2000, "start_prompt": "", "end_prompt": ""}
+    generation_kwargs = {"max_new_tokens": max_new_tokens, "start_prompt": "", "end_prompt": ""}
     exact_match: list[bool] = []
+    substr_match: list[bool] = []
 
     for idx in tqdm(range(min(max_samples, len(data))), desc="Evaluating AIME model"):
         question = data[idx][question_column]
@@ -181,8 +183,9 @@ def evaluate_hf_model_aime(
             decoded = decoded.split(remove_suffix)[0]
 
         exact_match.append(compute_exact(decoded, ground_truth))
+        substr_match.append(normalize_answer(ground_truth) in normalize_answer(decoded))
 
-    return {"exact_match": np.mean(exact_match)}
+    return {"exact_match": np.mean(exact_match), "substr_match": np.mean(substr_match)}
 
 
 if __name__ == "__main__":
@@ -215,10 +218,10 @@ if __name__ == "__main__":
 
     # Generation arguments
     parser.add_argument(
-        "--max_tokens",
+        "--max_new_tokens",
         type=int,
         help="The maximum number of tokens to generate",
-        default=50,
+        default=2400,
     )
     parser.add_argument(
         "--remove_suffix",
@@ -290,6 +293,7 @@ if __name__ == "__main__":
             data,
             question_column="question",
             answer_column="answer",
+            max_new_tokens=args.max_new_tokens,
             max_samples=args.max_samples,
         )
     else:
