@@ -236,9 +236,8 @@ if __name__ == "__main__":
             {"role": "user", "content": row[args.input_col]},
             {"role": "assistant", "content": row[args.explain_col]},
             {"role": "user", "content": "What is the final answer?"},
-            {"role": "assistant", "content": row[args.target_col]},
+            {"role": "assistant", "content": f"{row[args.target_col]}"},
         ]
-        print(messages)
         example = tokenizer.apply_chat_template(messages, tokenize=False)
         return {"text": example}
 
