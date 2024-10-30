@@ -316,7 +316,8 @@ if __name__ == "__main__":
         )
         tokenizer = AutoTokenizer.from_pretrained("unsloth/llama-3-8b-Instruct-bnb-4bit") # hardcode
         FastLanguageModel.for_inference(model)
-        pipeline = transformers.TextGenerationPipeline(
+        pipeline = transformers.pipeline(
+            "text-generation",
             model=model,
             tokenizer=tokenizer,
             # device_map="auto",
