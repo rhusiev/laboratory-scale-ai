@@ -4,9 +4,7 @@ import json
 import argparse
 import torch
 import wandb
-from transformers import AutoModelForCausalLM, AutoTokenizer
-from generate_from_hf_model import generate_from_prompt
-from finetune import QUANZATION_MAP
+import transformers
 
 from datasets import load_dataset
 from tqdm import tqdm
