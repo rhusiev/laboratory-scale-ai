@@ -281,7 +281,6 @@ if __name__ == "__main__":
         pipeline = transformers.pipeline(
             "text-generation",
             model=model_id,
-            tokenizer=tokenizer,
             model_kwargs={"torch_dtype": torch.bfloat16},
             device_map="auto",
         )
