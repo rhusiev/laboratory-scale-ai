@@ -304,10 +304,11 @@ if __name__ == "__main__":
             load_in_4bit = True,
         )
         FastLanguageModel.for_inference(model)
-        pipeline = transformers.pipeline(
+        pipeline = transformers.TextGenerationPipeline(
             "text-generation",
             model=model,
             tokenizer=tokenizer,
+            device_map="auto",
         )
 
         # Evaluate the Hugging Face model
