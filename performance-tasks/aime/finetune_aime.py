@@ -242,9 +242,7 @@ if __name__ == "__main__":
         example = tokenizer.apply_chat_template(messages, tokenize=False)
         return {"text": example}
 
-    dataset = dataset.map(mapper, batched=False).remove_columns(
-        [args.input_col, args.explain_col, args.target_col]
-    )
+    dataset = dataset.map(mapper, batched=False)
     print(dataset)
     dataset.save_to_disk("acme_chat")
     logger.info("Loaded Dataset")
