@@ -15,7 +15,7 @@ from os import path, makedirs, getenv
 import re
 from typing import Optional
 
-TEMPLATE = [
+template = [
     # from aime 2018 I
     {"role": "system", "content": "You are a mathematics assistant that helps solve AIME problems. First think through the problem step by step, then when asked for the final answer, respond only with the integer number between 0 and 1000, without any explanation."},
     {"role": "user", "content": "Let $S$ be the number of ordered pairs of integers $(a,b)$ with $1 \\leq a \\leq 100$ and $b \\geq 0$ such that the polynomial $x^2+ax+b$ can be factored into the product of two (not necessarily distinct) linear factors with integer coefficients. Find the remainder when $S$ is divided by $1000$."},
@@ -164,7 +164,7 @@ def evaluate_hf_model_aime(
         ground_truth = str(data[idx][answer_column])
 
         # Generate and decode the output string, removing the special tokens and any suffixes
-        prompt = TEMPLATE + [{"role": "user", "content": question}]
+        prompt = template + [{"role": "user", "content": question}]
         decoded = pipeline(
             prompt,
             max_new_tokens=max_new_tokens,
@@ -257,6 +257,14 @@ if __name__ == "__main__":
         help="Name of the WandB API key variable name.",
     )
 
+    # few-shot learning?
+    parser.add_argument(
+        "--few-shot",
+        type=bool,
+        help="Whether to use few-shot learning",
+        default=True,
+    )
+
     # Parse the arguments
     args = parser.parse_args()
 
@@ -273,6 +281,9 @@ if __name__ == "__main__":
     # data = load_dataset(args.dataset, args.dataset_revision, split=args.split)
     data = load_dataset("csv", data_files="data/aime_2024_I.csv", delimiter=";")
     data = data["train"]
+
+    if not args.few_shot:
+        template = [template[0]]
 
     # Model evaluation logic based on the model type
     if args.model_type == "hf":
