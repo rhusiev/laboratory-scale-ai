@@ -67,7 +67,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--peft_save_dir",
         type=str,
-        default="peft_model",
+        default="AIMELlama-3.1-8B",
         help="The directory to save the PEFT model.",
     )
     parser.add_argument(
