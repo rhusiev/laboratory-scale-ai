@@ -243,6 +243,7 @@ if __name__ == "__main__":
         return {"text": example}
 
     dataset = dataset.map(mapper, batched=False)
+    print(dataset[0])
     print(dataset)
     dataset.save_to_disk("acme_chat")
     logger.info("Loaded Dataset")
