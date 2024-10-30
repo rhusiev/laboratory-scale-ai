@@ -5,6 +5,7 @@ import argparse
 import torch
 import wandb
 import transformers
+from unsloth import FastLanguageModel
 
 from datasets import load_dataset
 from tqdm import tqdm
@@ -198,7 +199,7 @@ if __name__ == "__main__":
         default="hf",
     )
     parser.add_argument(
-        "--hf_model_id",
+        "--model_id",
         type=str,
         help="The Huggingface model to evaluate",
         default="meta-llama/Llama-3.1-8B-Instruct",
@@ -274,12 +275,39 @@ if __name__ == "__main__":
 
     # Model evaluation logic based on the model type
     if args.model_type == "hf":
-        model_id = args.hf_model_id
+        model_id = args.model_id
         print("Loading Hugging Face model: ", model_id)
         pipeline = transformers.pipeline(
             "text-generation",
             model=model_id,
+            tokenizer=tokenizer,
             model_kwargs={"torch_dtype": torch.bfloat16},
+            device_map="auto",
+        )
+
+        # Evaluate the Hugging Face model
+        print("Evaluating Hugging Face model on AIME task: ", model_id)
+        aime_metrics = evaluate_hf_model_aime(
+            pipeline,
+            data,
+            question_column="question",
+            answer_column="answer",
+            max_new_tokens=args.max_new_tokens,
+            max_samples=args.max_samples,
+        )
+    elif args.model_type == "unsloth":
+        model_id = args.model_id
+        print("Loading Hugging Face model: ", model_id)
+        model, _ = FastLanguageModel.from_pretrained(
+            model_name = model_id,
+            dtype = None, # autodetect
+            load_in_4bit = True,
+        )
+        tokenizer = AutoTokenizer.from_pretrained("unsloth/llama-3-8b-Instruct-bnb-4bit") # hardcode
+        FastLanguageModel.for_inference(model)
+        pipeline = transformers.TextGenerationPipeline(
+            model=model,
+            tokenizer=tokenizer,
             device_map="auto",
         )
 
