@@ -7,7 +7,7 @@ import datasets
 import argparse
 import wandb
 
-from transformers import TrainingArguments
+from transformers import TrainingArguments, SFTTrainer
 from huggingface_hub import login as hf_login
 from os import path, mkdir, getenv
 from unsloth import FastLanguageModel, is_bfloat16_supported
