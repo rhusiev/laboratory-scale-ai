@@ -150,6 +150,7 @@ if __name__ == "__main__":
 
     # Parse arguments
     args = parser.parse_args()
+    model_id = args.model_id
 
     # HF Login
     if args.hf_token_var:
