@@ -305,7 +305,6 @@ if __name__ == "__main__":
         )
         FastLanguageModel.for_inference(model)
         pipeline = transformers.TextGenerationPipeline(
-            "text-generation",
             model=model,
             tokenizer=tokenizer,
             device_map="auto",
