@@ -260,9 +260,9 @@ if __name__ == "__main__":
     # few-shot learning?
     parser.add_argument(
         "--few-shot",
-        type=bool,
+        type=str,
         help="Whether to use few-shot learning",
-        default=True,
+        default="yes",
     )
 
     # Parse the arguments
@@ -282,7 +282,7 @@ if __name__ == "__main__":
     data = load_dataset("csv", data_files="data/aime_2024_I.csv", delimiter=";")
     data = data["train"]
 
-    if not args.few_shot:
+    if not args.few_shot == "no":
         template = [template[0]]
 
     # Model evaluation logic based on the model type
