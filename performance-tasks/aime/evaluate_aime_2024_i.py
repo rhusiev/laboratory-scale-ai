@@ -5,6 +5,7 @@ import argparse
 import torch
 import wandb
 import transformers
+        from unsloth import FastLanguageModel
 
 from datasets import load_dataset
 from tqdm import tqdm
@@ -276,10 +277,18 @@ if __name__ == "__main__":
     if args.model_type == "hf":
         model_id = args.hf_model_id
         print("Loading Hugging Face model: ", model_id)
+        model, tokenizer = FastLanguageModel.from_pretrained(
+            model_name = model_id,
+            max_seq_length = args.max_seq_length,
+            dtype = None, # autodetect
+            load_in_4bit = True,
+        )
+        FastLanguageModel.for_inference(model)
         pipeline = transformers.pipeline(
             "text-generation",
-            model=model_id,
-            model_kwargs={"torch_dtype": torch.bfloat8},
+            model=model,
+            tokenizer=tokenizer,
+            # model_kwargs={"torch_dtype": torch.bfloat16},
             device_map="auto",
         )
 
