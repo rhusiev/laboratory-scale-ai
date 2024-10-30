@@ -308,8 +308,6 @@ if __name__ == "__main__":
             "text-generation",
             model=model,
             tokenizer=tokenizer,
-            # model_kwargs={"torch_dtype": torch.bfloat16},
-            device_map="auto",
         )
 
         # Evaluate the Hugging Face model
