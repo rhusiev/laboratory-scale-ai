@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-import torch
-import bitsandbytes as bnb
 import logging
 import sys
 import transformers
@@ -12,14 +10,8 @@ import wandb
 from transformers import TrainingArguments
 from huggingface_hub import login as hf_login
 from os import path, mkdir, getenv
-from typing import Mapping
-from tqdm import tqdm
-
-from finetune import (
-    get_model_and_tokenizer,
-    get_lora_model,
-    get_default_trainer,
-)
+from unsloth import FastLanguageModel, is_bfloat16_supported
+from unsloth.chat_templates import get_chat_template
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Fine-tune an AIME model.")
@@ -28,7 +20,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model_id",
         type=str,
-        default="meta-llama/Llama-3.1-8B-Instruct",
+        default="unsloth/Meta-Llama-3.1-8B-bnb-4bit",
         help="The model ID to fine-tune.",
     )
     parser.add_argument(
@@ -36,56 +28,6 @@ if __name__ == "__main__":
         type=str,
         default="HF_TOKEN",
         help="Name of the HuggingFace API token variable name.",
-    )
-    parser.add_argument(
-        "--resume_from_checkpoint",
-        type=str,
-        default="False",
-        help="Whether to resume from a checkpoint.",
-    )
-
-    # Device arguments
-    parser.add_argument(
-        "--device", type=str, default="cuda:0", help="The device to mount the model on."
-    )
-    parser.add_argument(
-        "--use_mps_device",
-        type=str,
-        default="False",
-        help="Whether to use an MPS device.",
-    )
-    parser.add_argument(
-        "--max_memory",
-        type=str,
-        default="12000MB",
-        help="The maximum memory per GPU, in MB.",
-    )
-
-    # Model arguments
-    parser.add_argument(
-        "--gradient_checkpointing",
-        type=str,
-        default="True",
-        help="Whether to use gradient checkpointing.",
-    )
-    parser.add_argument(
-        "--quantization_type",
-        type=str,
-        default="4bit",
-        help="The quantization type to use for fine-tuning.",
-    )
-    parser.add_argument("--lora", type=str, default="True", help="Whether to use LoRA.")
-    parser.add_argument(
-        "--tune_modules",
-        type=str,
-        default="linear4bit",
-        help="The modules to tune using LoRA.",
-    )
-    parser.add_argument(
-        "--exclude_names",
-        type=str,
-        default="lm_head",
-        help="The names of the modules to exclude from tuning.",
     )
 
     # Dataset arguments
@@ -106,12 +48,6 @@ if __name__ == "__main__":
         type=str,
         default="label",
         help="The name of the target column in the dataset.",
-    )
-    parser.add_argument(
-        "--max_steps",
-        type=int,
-        default=None,
-        help="The maximum number of steps to use for fine-tuning.",
     )
 
     # Saving arguments
@@ -154,18 +90,6 @@ if __name__ == "__main__":
         help="The log level to use for fine-tuning.",
     )
     parser.add_argument(
-        "--logging_first_step",
-        type=str,
-        default="True",
-        help="Whether to log the first step.",
-    )
-    parser.add_argument(
-        "--logging_steps",
-        type=int,
-        default=1,
-        help="The number of steps between logging.",
-    )
-    parser.add_argument(
         "--run_name",
         type=str,
         default="peft-aime",
@@ -193,61 +117,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--max_seq_length",
         type=int,
-        default=974,
+        default=2048,
         help="The maximum sequence length to use for fine-tuning.",
-    )
-
-    # Training arguments
-    parser.add_argument(
-        "--batch_size",
-        type=int,
-        default=1,
-        help="The batch size to use for fine-tuning.",
-    )
-    parser.add_argument(
-        "--gradient_accumulation_steps",
-        type=int,
-        default=4,
-        help="The number of gradient accumulation steps to use for fine-tuning.",
-    )
-    parser.add_argument(
-        "--learning_rate",
-        type=float,
-        default=2e-4,
-        help="The learning rate to use for fine-tuning.",
-    )
-    parser.add_argument("--fp16", type=str, default="True", help="Whether to use fp16.")
-    parser.add_argument(
-        "--optim",
-        type=str,
-        default="paged_adamw_8bit",
-        help="The optimizer to use for fine-tuning.",
-    )
-    parser.add_argument(
-        "--warmup_steps",
-        type=int,
-        default=10,
-        help="The number of warmup steps to use for fine-tuning.",
-    )
-
-    # Evaluation arguments
-    parser.add_argument(
-        "--evaluation_strategy",
-        type=str,
-        default="steps",
-        help="The evaluation strategy to use for fine-tuning.",
-    )
-    parser.add_argument(
-        "--eval_steps",
-        type=int,
-        default=250,
-        help="The number of steps between evaluations.",
-    )
-    parser.add_argument(
-        "--eval_on_test",
-        type=str,
-        default="True",
-        help="Whether to evaluate the model on the test set after fine-tuning.",
     )
 
     # Hub arguments
@@ -260,7 +131,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--hub_save_id",
         type=str,
-        default="rad1an/peft-aime",
+        default="rad1an/AIMELlama-3.1-8B",
         help="The name under which the model will be saved on the hub.",
     )
     parser.add_argument(
@@ -270,56 +141,15 @@ if __name__ == "__main__":
         help="The number of steps between saving the model to the hub.",
     )
 
+    parser.add_argument(
+        "--dataset_path",
+        type=str,
+        default="data/aime_2023_I_think.csv",
+        help="The path to the dataset.",
+    )
+
     # Parse arguments
     args = parser.parse_args()
-
-    def data_formatter(
-        data: Mapping,
-        input_field: str = args.input_col,
-        explain_field: str = args.explain_col,
-        target_field: str = args.target_col,
-    ) -> list[str]:
-        new_data = []
-        for i in tqdm(range(len(data[input_field])), desc="Formatting data"):
-            messages = [
-                {
-                    "role": "system",
-                    "content": "After a user asks a question think about how to solve the problem. When asked to give a final answer, reply with a single number, without explanations. Each answer is an integer between 0 and 1000.",
-                },
-                {
-                    "role": "user",
-                    "content": data[input_field][i],
-                },
-                {
-                    "role": "assistant",
-                    "content": data[explain_field][i],
-                },
-            ]
-            new_data.append(messages)
-            messages = [
-                {
-                    "role": "system",
-                    "content": "After a user asks a question think about how to solve the problem. When asked to give a final answer, reply with a single number, without explanations. Each answer is an integer between 0 and 1000.",
-                },
-                {
-                    "role": "user",
-                    "content": data[input_field][i],
-                },
-                {
-                    "role": "assistant",
-                    "content": data[explain_field][i],
-                },
-                {
-                    "role": "user",
-                    "content": "What is the final answer?",
-                },
-                {
-                    "role": "assistant",
-                    "content": data[target_field][i],
-                },
-            ]
-            new_data.append(messages)
-        return new_data
 
     # HF Login
     if args.hf_token_var:
@@ -373,99 +203,80 @@ if __name__ == "__main__":
 
     # Get model and tokenizer
     print("Getting model and tokenizer...")
-
-    model, tokenizer = get_model_and_tokenizer(
-        args.model_id,
-        quantization_type=args.quantization_type,
-        gradient_checkpointing=bool(args.gradient_checkpointing),
-        device=args.device,
+    model, tokenizer = FastLanguageModel.from_pretrained(
+        model_name=model_id,
+        max_seq_length=args.max_seq_length,
+        load_in_4bit=True,
+        dtype=None,
     )
-
-    tokenizer.padding_side = "right"
+    model = FastLanguageModel.get_peft_model(
+        model,
+        r=16,
+        lora_alpha=16,
+        lora_dropout=0,
+        target_modules=["q_proj", "k_proj", "v_proj", "up_proj", "down_proj", "o_proj", "gate_proj"],
+        use_rslora=True,
+        use_gradient_checkpointing="unsloth"
+    )
+    tokenizer = get_chat_template(
+        tokenizer,
+        chat_template="chatml",
+        mapping={"role" : "from", "content" : "value", "user" : "human", "assistant" : "gpt"}
+    )
 
     logger.info(f"Loaded Model ID: {args.model_id}")
+    dataset = datasets.load_dataset("csv", data_files=args.dataset_path, delimiter=";")
+    def mapper(row):
+        messages = [
+            {
+                "role": "system",
+                "content": "You are a mathematics assistant that helps solve AIME problems. First think through the problem step by step, then when asked for the final answer, respond only with the integer number between 0 and 1000, without any explanation.",
+            },
+            {"role": "user", "content": row[args.input_col]},
+            {"role": "assistant", "content": row[args.explain_col]},
+            {"role": "user", "content": "What is the final answer?"},
+            {"role": "assistant", "content": row[args.target_col]},
+        ]
+        example = tokenizer.apply_chat_template(messages, tokenize=False)
+        return {"text": example}
 
-    # Get LoRA model
-    if args.lora == "True":
-        print("Getting LoRA model...")
-
-        if args.tune_modules == "linear":
-            lora_modules = [torch.nn.Linear]
-        elif args.tune_modules == "linear4bit":
-            lora_modules = [bnb.nn.Linear4bit]
-        elif args.tune_modules == "linear8bit":
-            lora_modules = [bnb.nn.Linear8bit]
-        else:
-            raise ValueError(
-                f"Invalid tune_modules argument: {args.tune_modules}, must be linear, linear4bit, or linear8bit"
-            )
-
-        model = get_lora_model(
-            model,
-            include_modules=lora_modules,
-            exclude_names=args.exclude_names,
-            matrix_rank=32,
-        )
-
-        logger.info(f"Loaded LoRA Model")
-
-    # Download and prepare data
-    print("Downloading and preparing data...")
-
-    data = datasets.load_dataset(
-        "csv", data_files="data/aime_2024_I.csv", delimiter=";"
+    dataset = dataset.map(mapper, batched=False).remove_columns(
+        [args.input_col, args.explain_col, args.target_col]
     )
-    data = data["train"]
-
-    # Get dataset splits
-    train_data = data[: len(data) * 8 // 10]
-    validation_data = data[len(data) * 8 // 10 :]
-
-    # Set the format of the data
-    train_data.set_format(type="torch", device=args.device)
-    validation_data.set_format(type="torch", device=args.device)
-
+    dataset.save_to_disk("acme_chat")
     logger.info("Loaded Dataset")
-
-    # Handle no max steps by training one dataset epoch
-    if args.max_steps is None:
-        args.max_steps = len(train_data)
 
     # Instantiate trainer
     print("Instantiating trainer...")
 
-    training_args = TrainingArguments(
-        per_device_train_batch_size=args.batch_size,
-        gradient_accumulation_steps=args.gradient_accumulation_steps,
-        warmup_steps=args.warmup_steps,
-        max_steps=args.max_steps,
-        learning_rate=args.learning_rate,
-        fp16=args.fp16 == "True",
-        logging_steps=args.logging_steps,
-        output_dir=args.peft_save_dir,
-        optim=args.optim,
-        use_mps_device=args.use_mps_device == "True",
-        log_level=args.log_level,
-        logging_first_step=args.logging_first_step == "True",
-        evaluation_strategy=args.evaluation_strategy,
-        eval_steps=args.eval_steps,
-        resume_from_checkpoint=args.resume_from_checkpoint == "True",
-        push_to_hub=args.hub_upload == "True",
-        save_steps=args.save_steps,
-        report_to=["wandb"] if args.wandb_logging == "True" else [],
-    )
-
-    trainer = get_default_trainer(
-        model,
-        tokenizer,
-        train_data,
-        eval_dataset=validation_data,
-        formatting_func=data_formatter,
+    trainer=SFTTrainer(
+        model=model,
+        tokenizer=tokenizer,
+        train_dataset=dataset,
+        dataset_text_field="text",
         max_seq_length=args.max_seq_length,
-        training_args=training_args,
+        dataset_num_proc=2,
+        packing=True,
+        args=TrainingArguments(
+            learning_rate=3e-4,
+            lr_scheduler_type="linear",
+            per_device_train_batch_size=4,
+            gradient_accumulation_steps=4,
+            num_train_epochs=1,
+            fp16=not is_bfloat16_supported(),
+            bf16=is_bfloat16_supported(),
+            logging_steps=1,
+            optim="adamw_8bit",
+            weight_decay=0.01,
+            warmup_steps=10,
+            output_dir=args.peft_save_dir,
+            seed=0,
+            log_level=args.log_level,
+            report_to=["wandb"] if args.wandb_logging == "True" else [],
+            save_steps=args.save_steps,
+            push_to_hub=args.hub_upload == "True",
+        ),
     )
-
-    model.config.use_cache = False
 
     logger.info(f"Instantiated Trainer")
 
@@ -484,8 +295,7 @@ if __name__ == "__main__":
             mkdir(args.save_dir)
             print(f"Created directory {args.save_dir}")
 
-        trainer.model.save_pretrained(args.save_dir)
-        tokenizer.save_pretrained(args.save_dir)
+        model.save_pretrained_merged("model", tokenizer, save_method="merged_16bit")
 
         logger.info(f"Saved model and tokenizer to {args.save_dir}")
 
