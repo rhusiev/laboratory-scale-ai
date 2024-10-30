@@ -145,8 +145,7 @@ def compute_exact(a_gold, a_pred):
 
 
 def evaluate_hf_model_aime(
-    model: AutoModelForCausalLM,
-    tokenizer: AutoTokenizer,
+    pipeline,
     data: Sequence[dict[str, str]],
     question_column: str = "input",
     answer_column: str = "output",
@@ -157,7 +156,6 @@ def evaluate_hf_model_aime(
     """
     Evaluate a Hugging Face model on a AIME 2024 I task.
     """
-    generation_kwargs = {"max_new_tokens": max_new_tokens, "start_prompt": "", "end_prompt": ""}
     exact_match: list[bool] = []
     substr_match: list[bool] = []
 
@@ -167,20 +165,20 @@ def evaluate_hf_model_aime(
 
         # Generate and decode the output string, removing the special tokens and any suffixes
         prompt = TEMPLATE + [{"role": "user", "content": question}]
-        input_data = tokenizer.apply_chat_template(prompt, tokenize=False, add_generation_prompt=True)
-        decoded = generate_from_prompt(model, tokenizer, input_data, **generation_kwargs)
+        decoded = pipeline(
+            prompt,
+            max_new_tokens=max_new_tokens,
+        )[0]["generated_text"]
 
-        new_chat = list(prompt) + [{"role": "assistant", "content": decoded}, {"role": "user", "content": "What is the final answer?"}]
-        input_data = tokenizer.apply_chat_template(new_chat, tokenize=False, add_generation_prompt=True)
-        decoded = generate_from_prompt(model, tokenizer, input_data, **generation_kwargs)
+        new_chat = decoded + [{"role": "user", "content": "What is the final answer?"}]
+        decoded = pipeline(
+            new_chat,
+            max_new_tokens=max_new_tokens,
+        )[0]["generated_text"][-1]["content"]
 
         print("Chat")
         print(new_chat)
         print(f"{ground_truth = } -> {decoded = }")
-
-        # Remove the suffix if specified - note that Mistral-Instruct models add a </s> suffix to specify the end of the output
-        if remove_suffix is not None and remove_suffix in decoded:
-            decoded = decoded.split(remove_suffix)[0]
 
         exact_match.append(compute_exact(decoded, ground_truth))
         substr_match.append(normalize_answer(ground_truth) in normalize_answer(decoded))
@@ -280,16 +278,17 @@ if __name__ == "__main__":
     if args.model_type == "hf":
         model_id = args.hf_model_id
         print("Loading Hugging Face model: ", model_id)
-        tokenizer = AutoTokenizer.from_pretrained(model_id)
-        tokenizer.pad_token_id = tokenizer.eos_token_id
-        model = AutoModelForCausalLM.from_pretrained(model_id, quantization_config=QUANZATION_MAP['8bit'])
-        model.eval()
+        pipeline = transformers.pipeline(
+            "text-generation",
+            model=model_id,
+            model_kwargs={"torch_dtype": torch.bfloat16},
+            device_map="auto",
+        )
 
         # Evaluate the Hugging Face model
         print("Evaluating Hugging Face model on AIME task: ", model_id)
         aime_metrics = evaluate_hf_model_aime(
-            model,
-            tokenizer,
+            pipeline,
             data,
             question_column="question",
             answer_column="answer",
