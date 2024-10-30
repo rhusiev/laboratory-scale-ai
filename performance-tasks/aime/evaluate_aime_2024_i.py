@@ -309,7 +309,7 @@ if __name__ == "__main__":
         pipeline = transformers.TextGenerationPipeline(
             model=model,
             tokenizer=tokenizer,
-            device_map="auto",
+            # device_map="auto",
         )
 
         # Evaluate the Hugging Face model
