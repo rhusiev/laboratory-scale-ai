@@ -222,8 +222,8 @@ if __name__ == "__main__":
     )
     tokenizer = get_chat_template(
         tokenizer,
-        chat_template="llama",
-        mapping={"role" : "from", "content" : "value", "user" : "human", "assistant" : "gpt"}
+        chat_template = "llama-3.1",
+        # mapping={"role" : "from", "content" : "value", "user" : "human", "assistant" : "gpt"}
     )
 
     logger.info(f"Loaded Model ID: {args.model_id}")
