@@ -283,6 +283,7 @@ if __name__ == "__main__":
     data = data["train"]
 
     if not args.few_shot == "no":
+        print("Using only system message for template")
         template = [template[0]]
     print(f"Using template: {template}")
 
