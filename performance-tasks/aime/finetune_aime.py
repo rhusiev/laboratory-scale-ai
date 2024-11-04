@@ -21,7 +21,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model_id",
         type=str,
-        default="unsloth/Meta-Llama-3.1-8B-bnb-4bit",
+        default="unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit",
         help="The model ID to fine-tune.",
     )
     parser.add_argument(
