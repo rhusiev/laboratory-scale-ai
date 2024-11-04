@@ -282,10 +282,8 @@ if __name__ == "__main__":
     data = load_dataset("csv", data_files="data/aime_2024_I.csv", delimiter=";")
     data = data["train"]
 
-    if not args.few_shot == "no":
-        print("Using only system message for template")
+    if args.few_shot == "no":
         template = [template[0]]
-    print(f"Using template: {template}")
 
     # Model evaluation logic based on the model type
     if args.model_type == "hf":
