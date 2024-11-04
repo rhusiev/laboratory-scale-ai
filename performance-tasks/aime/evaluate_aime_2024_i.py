@@ -259,7 +259,7 @@ if __name__ == "__main__":
 
     # few-shot learning?
     parser.add_argument(
-        "--few-shot",
+        "--few_shot",
         type=str,
         help="Whether to use few-shot learning",
         default="yes",
@@ -284,6 +284,7 @@ if __name__ == "__main__":
 
     if not args.few_shot == "no":
         template = [template[0]]
+    print(f"Using template: {template}")
 
     # Model evaluation logic based on the model type
     if args.model_type == "hf":
