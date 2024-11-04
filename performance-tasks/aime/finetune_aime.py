@@ -245,7 +245,7 @@ if __name__ == "__main__":
     dataset = dataset.map(mapper, batched=False)["train"]
     # print(dataset[0])
     # print(dataset)
-    dataset.save_to_disk("acme_chat")
+    dataset.save_to_disk("aime_chat_dataset")
     logger.info("Loaded Dataset")
 
     # Instantiate trainer
