@@ -222,7 +222,7 @@ if __name__ == "__main__":
     )
     tokenizer = get_chat_template(
         tokenizer,
-        chat_template="chatml",
+        chat_template="llama",
         mapping={"role" : "from", "content" : "value", "user" : "human", "assistant" : "gpt"}
     )
 
