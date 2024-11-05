@@ -7,6 +7,7 @@ import wandb
 import transformers
 from transformers import AutoTokenizer
 from unsloth import FastLanguageModel
+from unsloth.chat_templates import get_chat_template
 
 from datasets import load_dataset
 from tqdm import tqdm
@@ -315,6 +316,11 @@ if __name__ == "__main__":
             load_in_4bit = True,
         )
         tokenizer = AutoTokenizer.from_pretrained("unsloth/llama-3-8b-Instruct-bnb-4bit") # hardcode
+        tokenizer = get_chat_template(
+            tokenizer,
+            chat_template = "llama-3.1",
+            # mapping={"role" : "from", "content" : "value", "user" : "human", "assistant" : "gpt"}
+        )
         FastLanguageModel.for_inference(model)
         pipeline = transformers.pipeline(
             "text-generation",
