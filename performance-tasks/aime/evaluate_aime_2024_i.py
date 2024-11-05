@@ -351,7 +351,7 @@ if __name__ == "__main__":
     metrics = {**vars(args), **aime_metrics}
 
     # Save the metrics to a JSON file
-    model_id = args.hf_model_id
+    model_id = args.model_id
     save_path = path.join(
         args.save_dir, f'{model_id.replace("/", "-")}_aime_2024_i_metrics.json'
     )
