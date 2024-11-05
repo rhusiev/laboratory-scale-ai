@@ -240,6 +240,7 @@ if __name__ == "__main__":
             {"role": "assistant", "content": f"{row[args.target_col]}"},
         ]
         example = tokenizer.apply_chat_template(messages, tokenize=False)
+        print("example: ", example)
         return {"text": example}
 
     dataset = dataset.map(mapper, batched=False)["train"]
