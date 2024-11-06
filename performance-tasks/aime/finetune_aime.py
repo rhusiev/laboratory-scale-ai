@@ -118,7 +118,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--max_seq_length",
         type=int,
-        default=3072,
+        default=2048,
         help="The maximum sequence length to use for fine-tuning.",
     )
 
