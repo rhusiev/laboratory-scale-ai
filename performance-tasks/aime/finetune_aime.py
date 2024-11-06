@@ -145,7 +145,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dataset_path",
         type=str,
-        default="data/aime_22-23_think.csv",
+        default="data/aime_20-23_think.csv",
         help="The path to the dataset.",
     )
 
