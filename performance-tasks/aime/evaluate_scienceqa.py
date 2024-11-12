@@ -151,7 +151,7 @@ def evaluate_hf_model_scienceqa(
     remove_suffix: str = None,
 ) -> dict:
     """
-    Evaluate a Hugging Face model on a AIME 2024 I task.
+    Evaluate a Hugging Face model on a ScienceQA task.
     """
     exact_match: list[bool] = []
     substr_match: list[bool] = []
@@ -281,8 +281,6 @@ if __name__ == "__main__":
     data = load_dataset("derek-thomas/ScienceQA", split="test")
     # filter out where image is None
     data = data.filter(lambda x: bool(x["image"]))
-    # data = load_dataset("csv", data_files="data/aime_2024_I.csv", delimiter=";")
-    # data = data["test"]
 
     if args.few_shot == "no":
         template = [template[0]]
@@ -299,8 +297,8 @@ if __name__ == "__main__":
         )
 
         # Evaluate the Hugging Face model
-        print("Evaluating Hugging Face model on AIME task: ", model_id)
-        aime_metrics = evaluate_hf_model_aime(
+        print("Evaluating Hugging Face model on ScienceQA task: ", model_id)
+        sqa_metrics = evaluate_hf_model_scienceqa(
             pipeline,
             data,
             question_column="question",
@@ -331,8 +329,8 @@ if __name__ == "__main__":
         )
 
         # Evaluate the Hugging Face model
-        print("Evaluating Hugging Face model on AIME task: ", model_id)
-        aime_metrics = evaluate_hf_model_aime(
+        print("Evaluating Hugging Face model on ScienceQA task: ", model_id)
+        sqa_metrics = evaluate_hf_model_scienceqa(
             pipeline,
             data,
             question_column="question",
@@ -344,19 +342,19 @@ if __name__ == "__main__":
         raise ValueError("Invalid model type: ", args.model_type)
 
     # Print the metrics to the console
-    print("Model AIME Metrics:")
-    for key, value in aime_metrics.items():
+    print("Model ScienceQA Metrics:")
+    for key, value in sqa_metrics.items():
         print(f"{key}: {value}")
 
     # Add the model and dataset names to the metrics dictionary
-    metrics = {**vars(args), **aime_metrics}
+    metrics = {**vars(args), **sqa_metrics}
 
     # Save the metrics to a JSON file
     model_id = args.model_id
     save_path = path.join(
-        args.save_dir, f'{model_id.replace("/", "-")}_aime_2024_i_metrics.json'
+        args.save_dir, f'{model_id.replace("/", "-")}_sqa_metrics.json'
     )
-    print("Saving AIME metrics to: ", save_path)
+    print("Saving ScienceQA metrics to: ", save_path)
 
     if not path.exists(args.save_dir):
         makedirs(args.save_dir)
