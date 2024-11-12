@@ -280,7 +280,7 @@ if __name__ == "__main__":
     print("Loading dataset")
     data = load_dataset("derek-thomas/ScienceQA", split="test")
     # filter out where image is None
-    data = data.filter(lambda x: bool(x["image"]))
+    data = data.filter(lambda x: bool(x["image"]) and x["image"] != "null")
 
     if args.few_shot == "no":
         template = [template[0]]
