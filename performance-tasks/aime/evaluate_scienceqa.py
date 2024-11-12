@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+import time
 import numpy as np
 import json
 import argparse
@@ -280,7 +281,7 @@ if __name__ == "__main__":
     print("Loading dataset")
     data = load_dataset("derek-thomas/ScienceQA", split="test")
     # filter out where image is None
-    data = data.filter(lambda x: bool(x["image"]) and x["image"] != "null")
+    data = data.filter(lambda x: bool(x["image"]) and x["image"] != "null" and time.sleep(1) and printe(x["image"]))
 
     if args.few_shot == "no":
         template = [template[0]]
