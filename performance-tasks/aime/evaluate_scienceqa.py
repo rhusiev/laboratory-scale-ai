@@ -20,6 +20,7 @@ template = [
     # from scienceqa train
     {"role": "system", "content": "You are passing an exam. At first you can think about the question, but when asked to give the final answer, you have to give a single letter - your answer."},
     {"role": "user", "content": """Which tense does the sentence use? Mona will print her name with care.
+
 A. present tense
 B. future tense
 C. past tense"""},
@@ -278,7 +279,6 @@ if __name__ == "__main__":
     # Load the test split of the dataset
     print("Loading dataset")
     data = load_dataset("derek-thomas/ScienceQA", split="test")
-    data = data["test"]
     data = data[not data["image"]]
     # data = load_dataset("csv", data_files="data/aime_2024_I.csv", delimiter=";")
     # data = data["test"]
