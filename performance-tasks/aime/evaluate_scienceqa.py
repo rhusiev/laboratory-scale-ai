@@ -279,7 +279,8 @@ if __name__ == "__main__":
     # Load the test split of the dataset
     print("Loading dataset")
     data = load_dataset("derek-thomas/ScienceQA", split="test")
-    data = data[data["image"] == None]
+    # filter out where image is None
+    data = data.filter(lambda x: bool(x["image"]))
     # data = load_dataset("csv", data_files="data/aime_2024_I.csv", delimiter=";")
     # data = data["test"]
 
