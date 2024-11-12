@@ -279,7 +279,7 @@ if __name__ == "__main__":
     # Load the test split of the dataset
     print("Loading dataset")
     data = load_dataset("derek-thomas/ScienceQA", split="test")
-    data = data[not data["image"]]
+    data = data[data["image"] == None]
     # data = load_dataset("csv", data_files="data/aime_2024_I.csv", delimiter=";")
     # data = data["test"]
 
