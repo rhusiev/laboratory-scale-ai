@@ -130,13 +130,9 @@ def get_tokens(s):
 
 
 def compute_exact(a_gold, a_pred):
-    try:
-        int_pred = int(normalize_answer(a_pred))
-        int_gold = int(normalize_answer(a_gold))
-    except ValueError:
-        print("Non-number in answer")
-        return False
-    return int_gold == int_pred
+    norm_pred = normalize_answer(a_pred)
+    norm_gold = normalize_answer(a_gold)
+    return norm_gold == norm_pred
 
 
 ############
