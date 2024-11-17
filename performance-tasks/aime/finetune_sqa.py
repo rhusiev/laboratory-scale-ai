@@ -227,8 +227,8 @@ if __name__ == "__main__":
     )
 
     logger.info(f"Loaded Model ID: {args.model_id}")
-    data = datasets.load_dataset("derek-thomas/ScienceQA", split="train")
-    data = data.filter(lambda x: bool(x["image"]) and len(x[args.explain_col]) > 2)
+    dataset = datasets.load_dataset("derek-thomas/ScienceQA", split="train")
+    dataset = dataset.filter(lambda x: bool(x["image"]) and len(x[args.explain_col]) > 2)
     def mapper(row):
         messages = [
             {
