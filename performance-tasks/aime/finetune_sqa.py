@@ -243,7 +243,7 @@ if __name__ == "__main__":
         example = tokenizer.apply_chat_template(messages, tokenize=False)
         return {"text": example}
 
-    dataset = dataset.map(mapper, batched=False)["train"]
+    dataset = dataset.map(mapper, batched=False)
     # print(dataset[0])
     # print(dataset)
     dataset.save_to_disk("sqa_chat_dataset")
