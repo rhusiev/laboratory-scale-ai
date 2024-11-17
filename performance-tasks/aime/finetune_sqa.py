@@ -230,15 +230,20 @@ if __name__ == "__main__":
     dataset = datasets.load_dataset("derek-thomas/ScienceQA", split="train")
     dataset = dataset.filter(lambda x: bool(x["image"]) and len(x[args.explain_col]) > 2)
     def mapper(row):
+        question = row[args.input_col]
+        question += "\n"
+        for i, choice in enumerate(row["choices"]):
+            question += f"\n{chr(ord('A') + i)}. {choice}"
+        ground_truth = chr(ord("A") + int(row[args.target_col]))
         messages = [
             {
                 "role": "system",
                 "content": "You are passing an exam. At first you can think about the question, but when asked to give the final answer, you have to give a single letter - your answer.",
             },
-            {"role": "user", "content": row[args.input_col]},
+            {"role": "user", "content": question},
             {"role": "assistant", "content": row[args.explain_col]},
             {"role": "user", "content": "What is the final answer?"},
-            {"role": "assistant", "content": f"{row[args.target_col]}"},
+            {"role": "assistant", "content": ground_truth},
         ]
         example = tokenizer.apply_chat_template(messages, tokenize=False)
         print(example)
