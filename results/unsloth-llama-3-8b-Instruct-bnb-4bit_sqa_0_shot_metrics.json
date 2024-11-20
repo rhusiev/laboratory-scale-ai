@@ -1,0 +1,1 @@
+{"model_type": "unsloth", "model_id": "unsloth/llama-3-8b-Instruct-bnb-4bit", "max_samples": 100, "max_new_tokens": 4096, "remove_suffix": null, "device": "cuda", "seed": 42, "save_dir": "results", "wandb_logging": "False", "wandb_name": "scienceqa_eval", "wandb_api_var": "WANDB_API_KEY", "few_shot": "no", "exact_match": 0.57, "substr_match": 0.87, "real": 0.74}
