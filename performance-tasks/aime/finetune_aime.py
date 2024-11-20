@@ -213,8 +213,8 @@ if __name__ == "__main__":
     )
     model = FastLanguageModel.get_peft_model(
         model,
-        r=16,
-        lora_alpha=16,
+        r=4,
+        lora_alpha=4,
         lora_dropout=0,
         target_modules=["q_proj", "k_proj", "v_proj", "up_proj", "down_proj", "o_proj", "gate_proj"],
         use_rslora=True,
