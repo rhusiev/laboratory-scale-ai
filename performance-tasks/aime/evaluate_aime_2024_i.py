@@ -59,7 +59,11 @@ Instead of counting each case individually, I can look for a way to sum up all t
 I look for ways to simplify the total count. Trying to find a pattern that lets you calculate the sum more quickly.
 
 ## Apply Modular Arithmetic
-Once I have the total count, I apply the modulo operation to find the remainder when divided by 1000."""},
+Once I have the total count, I apply the modulo operation to find the remainder when divided by 1000.
+
+# Your task
+
+Now do these steps and solve the problem."""},
     {"role": "assistant", "content": r"""Notice that for $x^2+ax+b$ to be true, for every $a$, $b$ will always be the product of the possibilities of how to add two integers to $a$. For example, if $a=3$, $b$ will be the product of $(3,0)$ and $(2,1)$, as those two sets are the only possibilities of adding two integers to $a$. Note that order does not matter. If we just do some simple casework, we find out that:
 
 if $a$ is odd, there will always be $\left\lceil\frac{a}{2}\right\rceil$ $\left(\text{which is also }\frac{a+1}{2}\right)$ possibilities of adding two integers to $a$.
@@ -206,10 +210,10 @@ def evaluate_hf_model_aime(
         ground_truth = str(data[idx][answer_column])
 
         # Generate and decode the output string, removing the special tokens and any suffixes
-        if logic_column == "":
+        if logic_column == "" or data[idx][logic_column].strip() == "":
             prompt = template + [{"role": "user", "content": question}]
         else:
-            prompt = template + [{"role": "user", "content": f"{question}\n\n# To work this out I would do the following steps\n\n{data[idx][logic_column]}"}]
+            prompt = template + [{"role": "user", "content": f"{question}\n\n# To work this out I would do the following steps\n\n{data[idx][logic_column]}\n\n# Your task\n\nNow do these steps and solve the problem."}]
         decoded = pipeline(
             prompt,
             max_new_tokens=max_new_tokens,
