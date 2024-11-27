@@ -19,7 +19,47 @@ from typing import Optional
 template = [
     # from aime 2018 I
     {"role": "system", "content": "You are a mathematics assistant that helps solve AIME problems. First think through the problem step by step, then when asked for the final answer, respond only with the integer number between 0 and 1000, without any explanation."},
-    {"role": "user", "content": "Let $S$ be the number of ordered pairs of integers $(a,b)$ with $1 \\leq a \\leq 100$ and $b \\geq 0$ such that the polynomial $x^2+ax+b$ can be factored into the product of two (not necessarily distinct) linear factors with integer coefficients. Find the remainder when $S$ is divided by $1000$."},
+    {"role": "user", "content": """Let $S$ be the number of ordered pairs of integers $(a,b)$ with $1 \\leq a \\leq 100$ and $b \\geq 0$ such that the polynomial $x^2+ax+b$ can be factored into the product of two (not necessarily distinct) linear factors with integer coefficients. Find the remainder when $S$ is divided by $1000$.
+
+# To work this out I would do the following steps
+
+## Understand the Problem Setup
+
+The problem involves finding the number of integer pairs that make a quadratic expression factorable. I am working with quadratics of the form $x^2 + ax + b$, where $a$ ranges from 1 to 100 and $b$ is non-negative.
+
+## Explore Factorability Conditions
+
+Thinking about what makes a quadratic factorable. I want to find when $x^2 + ax + b$ can be written as a product of two linear factors with integer coefficients.
+
+## Develop a Key Insight
+
+I realize that the factorability depends on how many ways I can split $a$ into two integers. This is crucial - the number of ways to split $a$ will determine the possible values of $b$.
+
+## Handle Different Cases
+
+I recognize that the splitting of $a$ behaves differently for odd and even numbers:
+
+For odd numbers, notice how the splitting works differently
+For even numbers, observe a different pattern of splitting
+
+## Count the Possibilities
+
+I start systematically counting the number of ways to split each possible value of $a$:
+
+Begin with $a = 1$
+Carefully track the number of ways to split each subsequent value
+Pay attention to the emerging pattern
+
+## Use Summation Technique
+
+Instead of counting each case individually, I can look for a way to sum up all the possibilities efficiently. I consider using arithmetic series or summation formulas.
+
+## Simplify the Calculation
+
+I look for ways to simplify the total count. Trying to find a pattern that lets you calculate the sum more quickly.
+
+## Apply Modular Arithmetic
+Once I have the total count, I apply the modulo operation to find the remainder when divided by 1000."""},
     {"role": "assistant", "content": r"""Notice that for $x^2+ax+b$ to be true, for every $a$, $b$ will always be the product of the possibilities of how to add two integers to $a$. For example, if $a=3$, $b$ will be the product of $(3,0)$ and $(2,1)$, as those two sets are the only possibilities of adding two integers to $a$. Note that order does not matter. If we just do some simple casework, we find out that:
 
 if $a$ is odd, there will always be $\left\lceil\frac{a}{2}\right\rceil$ $\left(\text{which is also }\frac{a+1}{2}\right)$ possibilities of adding two integers to $a$.
@@ -150,6 +190,7 @@ def evaluate_hf_model_aime(
     data: Sequence[dict[str, str]],
     question_column: str = "input",
     answer_column: str = "output",
+    logic_column: str = "",
     max_new_tokens: int = 4096,
     max_samples: int = None,
     remove_suffix: str = None,
@@ -165,7 +206,10 @@ def evaluate_hf_model_aime(
         ground_truth = str(data[idx][answer_column])
 
         # Generate and decode the output string, removing the special tokens and any suffixes
-        prompt = template + [{"role": "user", "content": question}]
+        if logic_column == "":
+            prompt = template + [{"role": "user", "content": question}]
+        else:
+            prompt = template + [{"role": "user", "content": f"{question}\n\n# To work this out I would do the following steps\n\n{data[idx][logic_column]}"}]
         decoded = pipeline(
             prompt,
             max_new_tokens=max_new_tokens,
@@ -304,6 +348,7 @@ if __name__ == "__main__":
             data,
             question_column="question",
             answer_column="answer",
+            logic_column="logic",
             max_new_tokens=args.max_new_tokens,
             max_samples=args.max_samples,
         )
@@ -336,6 +381,7 @@ if __name__ == "__main__":
             data,
             question_column="question",
             answer_column="answer",
+            logic_column="logic",
             max_new_tokens=args.max_new_tokens,
             max_samples=args.max_samples,
         )
