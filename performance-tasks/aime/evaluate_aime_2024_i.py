@@ -252,7 +252,7 @@ if __name__ == "__main__":
         "--model_id",
         type=str,
         help="The Huggingface model to evaluate",
-        default="meta-llama/Llama-3.1-8B-Instruct",
+        default="unsloth/llama-3-8b-Instruct-bnb-4bit",
     )
 
     # Dataset arguments
@@ -352,7 +352,7 @@ if __name__ == "__main__":
             data,
             question_column="question",
             answer_column="answer",
-            logic_column="logic",
+            logic_column="full-o1-preview",
             max_new_tokens=args.max_new_tokens,
             max_samples=args.max_samples,
         )
