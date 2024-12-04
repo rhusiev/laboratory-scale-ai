@@ -354,7 +354,7 @@ if __name__ == "__main__":
             question_column="question",
             answer_column="answer",
             logic_column="full-o1-preview",
-            final_answer_column="with-answer",
+            # final_answer_column="with-answer",
             max_new_tokens=args.max_new_tokens,
             max_samples=args.max_samples,
         )
@@ -388,7 +388,7 @@ if __name__ == "__main__":
             question_column="question",
             answer_column="answer",
             logic_column="full-o1-preview",
-            final_answer_column="with-answer",
+            # final_answer_column="with-answer",
             max_new_tokens=args.max_new_tokens,
             max_samples=args.max_samples,
         )
