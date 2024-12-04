@@ -214,7 +214,7 @@ def evaluate_hf_model_aime(
         if logic_column == "" or data[idx][logic_column].strip() == "":
             prompt = template + [{"role": "user", "content": question}]
         else:
-            prompt = template + [{"role": "user", "content": f"{question}\n\n# To work this out I would do the following steps\n\n{data[idx][logic_column]}\n\n# Your task\n\nNow do these steps and solve the problem."}]
+            prompt = template + [{"role": "user", "content": f"{question}\n\n# To work this out I would do the following steps\n\n{data[idx][logic_column]}\n{data[idx][final_answer_column]}\n\n# Your task\n\nNow do these steps and solve the problem."}]
         decoded = pipeline(
             prompt,
             max_new_tokens=max_new_tokens,
