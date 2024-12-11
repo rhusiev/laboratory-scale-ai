@@ -193,7 +193,7 @@ def evaluate_hf_model_aime(
         prompt = decoded + [
             {
                 "role": "user",
-                "content": "# These were all the steps I had\n\n## Thinkg about the final answer.",
+                "content": "# These were all the steps I had\n\n## Think about the final answer.",
             }
         ]
         decoded = pipeline(
