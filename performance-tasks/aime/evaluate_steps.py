@@ -208,7 +208,7 @@ def evaluate_hf_model_aime(
                     + [
                         {
                             "role": "user",
-                            "content": f"# I think of doing the following reasoning step\n\n{data[idx][f'step{i}']}\n\n# Here is my thought process of completing the step\n\n{decoded[-1]}\n\n# Your task\n\nCheck whether my reasoning step is correct. If it is not, provide your corrected reasoning step. Otherwise reply with 'Yes'",
+                            "content": f"# I think of doing the following reasoning step\n\n{data[idx][f'step{i}']}\n\n# Here is my thought process of completing the step\n\n{decoded[-1]['content']}\n\n# Your task\n\nCheck whether my reasoning step is correct. If it is not, provide your corrected reasoning step. Otherwise reply with 'Yes'",
                         }
                     ]
                 )
@@ -224,6 +224,7 @@ def evaluate_hf_model_aime(
                 )
                 if response.lower() == "yes":
                     correct_steps += 1
+                    print("Correct reasoning step")
                 else:
                     decoded = decoded[:-1] + [
                         {
