@@ -1,16 +1,20 @@
 from collections.abc import Sequence
-import numpy as np
 import json
 import argparse
-import torch
 import wandb
+
+import numpy as np
+import torch
+
 import transformers
 from transformers import AutoTokenizer
 from unsloth import FastLanguageModel
 from unsloth.chat_templates import get_chat_template
+from openai import OpenAI
 
 from datasets import load_dataset
 from tqdm import tqdm
+
 from os import path, makedirs, getenv
 
 import re
@@ -22,6 +26,14 @@ template = [
         "content": "You are a mathematics assistant that helps solve AIME problems. First think through the problem step by step, then when asked for the final answer, respond only with the integer number between 0 and 1000, without any explanation.",
     },
 ]
+
+eval_template = {
+    "role": "system",
+    "content": "You are a mathematics assistant that helps solve AIME problems. "
+    "When asked to give a reasoning step, explain it thoroughly. "
+    "When asked to validate user's reasoning step, answer with just a word 'Yes' if the reasoning step is correct. "
+    "Otherwise write a correct reasoning step yourself",
+}
 
 #####
 # TODO: Below is partially adapted better answer parsing from
@@ -143,6 +155,7 @@ def evaluate_hf_model_aime(
     max_new_tokens: int = 4096,
     max_samples: int = None,
     remove_suffix: str = None,
+    eval_each_step: bool = False,
 ) -> dict:
     """
     Evaluate a Hugging Face model on a AIME 2024 I task.
@@ -151,6 +164,10 @@ def evaluate_hf_model_aime(
     substr_match: list[bool] = []
 
     steps: list[list[str]] = []
+
+    if eval_each_step:
+        client = OpenAI()
+        correct_steps = 0
 
     for idx in tqdm(range(min(max_samples, len(data))), desc="Evaluating AIME model"):
         steps.append([])
@@ -173,17 +190,49 @@ def evaluate_hf_model_aime(
             steps[-1].append(decoded[-1])
             i += 1
             # to account for limited context size
-            if i >= 7:
+            if i >= 6:
                 decoded = (
-                    decoded[: 2 * (i - 7) + 2]
+                    decoded[: 2 * (i - 6) + 2]
                     + [
                         {
                             "role": "assistant",
                             "content": "I did some calculations I will use in the next step.",
                         }
                     ]
-                    + decoded[2 * (i - 7) + 3 :]
+                    + decoded[2 * (i - 6) + 3 :]
                 )
+            if eval_each_step:
+                eval_prompt = (
+                    eval_template
+                    + decoded[:-2]
+                    + [
+                        {
+                            "role": "user",
+                            "content": f"# I think of doing the following reasoning step\n\n{data[idx][f'step{i}']}\n\n# Here is my thought process of completing the step\n\n{decoded[-1]}\n\n# Your task\n\nCheck whether my reasoning step is correct. If it is not, provide your corrected reasoning step. Otherwise reply with 'Yes'",
+                        }
+                    ]
+                )
+                print("Evaluating using")
+                print(eval_prompt)
+                response = (
+                    client.chat.completions.create(
+                        model="gpt-4o",
+                        messages=eval_prompt,
+                    )
+                    .choices[0]
+                    .message.content
+                )
+                if response.lower() == "yes":
+                    correct_steps += 1
+                else:
+                    decoded = decoded[:-1] + [
+                        {
+                            "role": "assistant",
+                            "content": response,
+                        }
+                    ]
+                    print("Corrected reasoning step")
+                    print(decoded[-1])
             if f"step{i}" not in data[idx] or data[idx][f"step{i}"] in [" ", "", None]:
                 break
             complete_chat = complete_chat + decoded[-2:]
@@ -205,7 +254,12 @@ def evaluate_hf_model_aime(
             max_new_tokens=max_new_tokens,
         )[0]["generated_text"]
         complete_chat = complete_chat + decoded[-2:]
-        prompt = decoded + [{"role": "user", "content": "What is the final answer? Give me a single number."}]
+        prompt = decoded + [
+            {
+                "role": "user",
+                "content": "What is the final answer? Give me a single number.",
+            }
+        ]
         complete_chat = complete_chat + [prompt[-1]]
         decoded = pipeline(
             prompt,
@@ -225,7 +279,12 @@ def evaluate_hf_model_aime(
         exact_match.append(compute_exact(decoded, ground_truth))
         substr_match.append(normalize_answer(ground_truth) in normalize_answer(decoded))
 
-    return {"exact_match": np.mean(exact_match), "substr_match": np.mean(substr_match)}
+    return {
+        "exact_match": np.mean(exact_match),
+        "substr_match": np.mean(substr_match),
+        "correct_steps": correct_steps if eval_each_step else 0,
+        "steps_count": sum(len(s) for s in steps) if eval_each_step else 0,
+    }
 
 
 if __name__ == "__main__":
@@ -298,9 +357,20 @@ if __name__ == "__main__":
         default="WANDB_API_KEY",
         help="Name of the WandB API key variable name.",
     )
+    parser.add_argument(
+        "--eval_each_step",
+        type=str,
+        default="no",
+        help="Whether to evaluate each step separately.",
+    )
 
     # Parse the arguments
     args = parser.parse_args()
+
+    if args.eval_each_step == "yes":
+        eval_each_step = True
+    else:
+        eval_each_step = False
 
     # Set the random seed for reproducibility
     torch.manual_seed(args.seed)
@@ -336,6 +406,7 @@ if __name__ == "__main__":
             answer_column="answer",
             max_new_tokens=args.max_new_tokens,
             max_samples=args.max_samples,
+            eval_each_step=eval_each_step,
         )
     elif args.model_type == "unsloth":
         model_id = args.model_id
@@ -370,6 +441,7 @@ if __name__ == "__main__":
             answer_column="answer",
             max_new_tokens=args.max_new_tokens,
             max_samples=args.max_samples,
+            eval_each_step=eval_each_step,
         )
     else:
         raise ValueError("Invalid model type: ", args.model_type)
