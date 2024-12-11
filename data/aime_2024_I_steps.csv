@@ -9,8 +9,8 @@ Determine that $$D = 1.6$$, and derive the equation $$\frac{18}{s(s+2)} = 1.6$$.
 
 Equate and cross-multiply to solve for $$s$$. Apply algebraic manipulations and the quadratic formula. Calculate the discriminant $$D = 784$$, which leads to $$\sqrt{784} = 28$$. Carefully consider the possible solutions.";"## Determining Aya's Journey Parameters
 
-Select the practical solution for Aya's speed, ruling out negative values. Identify the speed as $$2.5$$ km/h. Use this to calculate her time spent in the coffee shop, which comes out to $$24$$ minutes.;;;;;;;;;;;
-Real numbers $x$ and $y$ with $x,y>1$ satisfy $\log_x(y^x)=\log_y(x^{4y})=10.$ What is the value of $xy$?;025;"## Rewriting the Equations
+Select the practical solution for Aya's speed, ruling out negative values. Identify the speed as $$2.5$$ km/h. Use this to calculate her time spent in the coffee shop, which comes out to $$24$$ minutes.";;;;;;;;;;;
+Real numbers $x$ and $y$ with $x,y>1$ satisfy $\log_x(y^x)=\log_y(x^{4y})=10.$ What is the value of $xy$?;25;"## Rewriting the Equations
 Transforming both equations using logarithmic identities to simplify and solve for terms involving log xy and log yx. These transformations are crucial for isolating and solving for unknowns.";;;;;;;;;;;;;;;
 Alice and Bob play the following game. A stack of $n$ tokens lies before them. The players take turns with Alice going first. On each turn, the player removes $1$ token or $4$ tokens from the stack. The player who removes the last token wins. Find the number of positive integers $n$ less than or equal to $2024$ such that there is a strategy that guarantees that Bob wins, regardless of Alice’s moves.;809;"## Piecing Together Winning Strategy
 
