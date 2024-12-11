@@ -203,7 +203,7 @@ def evaluate_hf_model_aime(
                 )
             if eval_each_step:
                 eval_prompt = (
-                    eval_template
+                    [eval_template]
                     + decoded[:-2]
                     + [
                         {
