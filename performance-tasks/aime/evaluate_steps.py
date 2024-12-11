@@ -184,7 +184,7 @@ def evaluate_hf_model_aime(
         ]
         while True:
             print("===User===")
-            print(prompt[-1]["content"])
+            print(prompt[-1]["content"].replace("\n\n", "\n"))
             decoded = pipeline(
                 prompt,
                 max_new_tokens=max_new_tokens,
@@ -235,7 +235,7 @@ def evaluate_hf_model_aime(
                     print("===Correct reasoning step:===")
                 else:
                     print("===Original reasoning step:===")
-                    print(decoded[-1]["content"])
+                    print(decoded[-1]["content"].replace("\n\n", "\n"))
                     decoded = decoded[:-1] + [
                         {
                             "role": "assistant",
@@ -243,7 +243,7 @@ def evaluate_hf_model_aime(
                         }
                     ]
                     print("===Corrected reasoning step:===")
-                print(decoded[-1]["content"])
+                print(decoded[-1]["content"].replace("\n\n", "\n"))
             if f"step{i}" not in data[idx] or data[idx][f"step{i}"] in [" ", "", None]:
                 break
             prompt = decoded + [
@@ -260,7 +260,7 @@ def evaluate_hf_model_aime(
             }
         ]
         print("===User===")
-        print(prompt[-1]["content"])
+        print(prompt[-1]["content"].replace("\n\n", "\n"))
         decoded = pipeline(
             prompt,
             max_new_tokens=max_new_tokens,
@@ -289,7 +289,7 @@ def evaluate_hf_model_aime(
                 print("===Correct last reasoning step:===")
             else:
                 print("===Original last reasoning step:===")
-                print(decoded[-1]["content"])
+                print(decoded[-1]["content"].replace("\n\n", "\n"))
                 decoded = decoded[:-1] + [
                     {
                         "role": "assistant",
@@ -297,7 +297,7 @@ def evaluate_hf_model_aime(
                     }
                 ]
                 print("===Corrected last reasoning step:===")
-            print(decoded[-1]["content"])
+            print(decoded[-1]["content"].replace("\n\n", "\n"))
         prompt = decoded + [
             {
                 "role": "user",
