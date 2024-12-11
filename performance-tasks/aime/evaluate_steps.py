@@ -159,7 +159,7 @@ def evaluate_hf_model_aime(
                 max_new_tokens=max_new_tokens,
             )[0]["generated_text"]
             i += 1
-            if f"step{i}" not in data[idx] or data[idx][f"step{i}"] == "":
+            if f"step{i}" not in data[idx] or data[idx][f"step{i}"] in ["", None]:
                 break
             prompt = decoded + [{"role": "user", "content": f"# My next step would be\n\n{data[idx][f'step{i}']}\n\n# Your task\n\nDo this step, and I will give you the next instruction."}]
 
