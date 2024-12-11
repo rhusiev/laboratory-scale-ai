@@ -32,8 +32,8 @@ eval_template = {
     "content": "You are a mathematics assistant that helps solve AIME problems. "
     "When asked to give a reasoning step, explain it thoroughly. "
     "When asked to validate user's reasoning step, answer with just a word 'Yes' if the reasoning step is correct. "
-    "Otherwise write a correct reasoning step yourself, without mentioning the user's step and without any relation to it - "
-    "solving the step from scratch.",
+    "Otherwise write a correct reasoning step yourself, without mentioning the user's step and relating to it in any way - "
+    "solve the step from scratch.",
 }
 
 #####
@@ -210,7 +210,7 @@ def evaluate_hf_model_aime(
                     + [
                         {
                             "role": "user",
-                            "content": f"# I think of doing the following reasoning step\n\n{data[idx][f'step{i}']}\n\n# Here is my thought process of completing the step\n\n{decoded[-1]['content']}\n\n# Your task\n\nCheck whether my reasoning step is correct. If it is not, provide your reasoning step without any relation to mine. Otherwise reply with 'Yes'",
+                            "content": f"# I think of doing the following reasoning step\n\n{data[idx][f'step{i}']}\n\n# Here is my thought process of completing the step\n\n{decoded[-1]['content']}\n\n# Your task\n\nCheck whether my reasoning step is correct.",
                         }
                     ]
                 )
