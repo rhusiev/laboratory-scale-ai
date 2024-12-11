@@ -210,6 +210,9 @@ def evaluate_hf_model_aime(
 
         print("Chat")
         print(complete_chat)
+        if complete_chat != prompt:
+            print("Did not give the full chat to the model. Gave instead:")
+            print(prompt)
         print(f"{ground_truth = } -> {decoded = }")
 
         exact_match.append(compute_exact(decoded, ground_truth))
