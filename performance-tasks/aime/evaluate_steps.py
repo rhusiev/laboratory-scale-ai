@@ -32,7 +32,8 @@ eval_template = {
     "content": "You are a mathematics assistant that helps solve AIME problems. "
     "When asked to give a reasoning step, explain it thoroughly. "
     "When asked to validate user's reasoning step, answer with just a word 'Yes' if the reasoning step is correct. "
-    "Otherwise write a correct reasoning step yourself, without mentioning the user's step.",
+    "Otherwise write a correct reasoning step yourself, without mentioning the user's step and without any relation to it - "
+    "solving the step from scratch.",
 }
 
 #####
@@ -181,8 +182,9 @@ def evaluate_hf_model_aime(
                 "content": f"{question}\n\n# To work this out I would first do the following step\n\n{data[idx]['step1']}\n\n# Your task\n\nDo this step, and I will give you the next instruction.",
             }
         ]
-        complete_chat = prompt
         while True:
+            print("===User===")
+            print(prompt[-1]["content"])
             decoded = pipeline(
                 prompt,
                 max_new_tokens=max_new_tokens,
@@ -190,7 +192,7 @@ def evaluate_hf_model_aime(
             steps[-1].append(decoded[-1])
             i += 1
             # to account for limited context size
-            if i >= 6 or idx == 7 and i >= 4:
+            if i >= 5 or idx == 7 and i >= 4:
                 decoded = (
                     decoded[: 2 * (i - 6) + 2]
                     + [
@@ -212,8 +214,6 @@ def evaluate_hf_model_aime(
                         }
                     ]
                 )
-                print("Evaluating using")
-                print(eval_prompt)
                 response = (
                     client.chat.completions.create(
                         model="gpt-4o",
@@ -224,19 +224,20 @@ def evaluate_hf_model_aime(
                 )
                 if response.lower() == "yes":
                     correct_steps += 1
-                    print("Correct reasoning step")
+                    print("===Correct reasoning step:===")
                 else:
+                    print("===Original reasoning step:===")
+                    print(decoded[-1].content)
                     decoded = decoded[:-1] + [
                         {
                             "role": "assistant",
                             "content": response,
                         }
                     ]
-                    print("Corrected reasoning step")
-                    print(decoded[-1])
+                    print("===Corrected reasoning step:===")
+                print(decoded[-1])
             if f"step{i}" not in data[idx] or data[idx][f"step{i}"] in [" ", "", None]:
                 break
-            complete_chat = complete_chat + decoded[-2:]
             prompt = decoded + [
                 {
                     "role": "user",
@@ -250,36 +251,65 @@ def evaluate_hf_model_aime(
                 "content": "# These were all the steps I had\n\n## Think about the final answer.",
             }
         ]
+        print("===User===")
+        print(prompt[-1]["content"])
         decoded = pipeline(
             prompt,
             max_new_tokens=max_new_tokens,
         )[0]["generated_text"]
-        complete_chat = complete_chat + decoded[-2:]
+        if eval_each_step:
+            eval_prompt = (
+                [eval_template]
+                + decoded[1:-2]
+                + [
+                    {
+                        "role": "user",
+                        "content": f"# I think of doing the following last reasoning step thought process\n\n{decoded[-1]['content']}\n\n# Your task\n\nCheck whether my last reasoning step is correct. If it is not, provide your reasoning step without any relation to mine. Otherwise reply with 'Yes'",
+                    }
+                ]
+            )
+            response = (
+                client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=eval_prompt,
+                )
+                .choices[0]
+                .message.content
+            )
+            if response.lower() == "yes":
+                correct_steps += 1
+                print("===Correct last reasoning step:===")
+            else:
+                print("===Original last reasoning step:===")
+                print(decoded[-1].content)
+                decoded = decoded[:-1] + [
+                    {
+                        "role": "assistant",
+                        "content": response,
+                    }
+                ]
+                print("===Corrected last reasoning step:===")
+            print(decoded[-1].content)
         prompt = decoded + [
             {
                 "role": "user",
                 "content": "What is the final answer? Give me a single number.",
             }
         ]
-        complete_chat = complete_chat + [prompt[-1]]
+        print("===User===")
+        print(prompt[-1]["content"])
         decoded = pipeline(
             prompt,
             max_new_tokens=max_new_tokens,
         )[0]["generated_text"][-1]["content"]
 
-        print("Chat")
-        print(complete_chat)
-        if complete_chat != prompt:
-            print("Did not give the full chat to the model. Gave instead:")
-            print(prompt)
         print(f"{ground_truth = } -> {decoded = }")
-
-        with open("steps.json", "w") as f:
-            json.dump(steps, f)
 
         exact_match.append(compute_exact(decoded, ground_truth))
         substr_match.append(normalize_answer(ground_truth) in normalize_answer(decoded))
 
+    with open("steps.json", "w") as f:
+        json.dump(steps, f)
     return {
         "exact_match": np.mean(exact_match),
         "substr_match": np.mean(substr_match),
