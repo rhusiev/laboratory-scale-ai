@@ -227,7 +227,7 @@ def evaluate_hf_model_aime(
                     print("===Correct reasoning step:===")
                 else:
                     print("===Original reasoning step:===")
-                    print(decoded[-1].content)
+                    print(decoded[-1]["content"])
                     decoded = decoded[:-1] + [
                         {
                             "role": "assistant",
@@ -281,7 +281,7 @@ def evaluate_hf_model_aime(
                 print("===Correct last reasoning step:===")
             else:
                 print("===Original last reasoning step:===")
-                print(decoded[-1].content)
+                print(decoded[-1]["content"])
                 decoded = decoded[:-1] + [
                     {
                         "role": "assistant",
