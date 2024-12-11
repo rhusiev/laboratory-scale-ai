@@ -6,14 +6,14 @@ bitsandbytes
 datasets
 evaluate
 huggingface_hub
-numpy==1.23.5
+numpy
 openai
-pandas==2.0
+pandas
 peft
 pydantic==1.9
 rouge-score
 scikit-learn
-scipy==1.11
+#scipy==1.11
 tiktoken
 torch
 tqdm
