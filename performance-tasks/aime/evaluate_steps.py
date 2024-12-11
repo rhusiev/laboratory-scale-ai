@@ -178,7 +178,7 @@ def evaluate_hf_model_aime(
                             "content": "I did some calculations I will use in the next step.",
                         }
                     ]
-                    + decoded[i - 9 :]
+                    + decoded[2 * (i - 7) + 3 :]
                 )
             if f"step{i}" not in data[idx] or data[idx][f"step{i}"] in [" ", "", None]:
                 break
