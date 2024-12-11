@@ -190,7 +190,7 @@ def evaluate_hf_model_aime(
             steps[-1].append(decoded[-1])
             i += 1
             # to account for limited context size
-            if i >= 6:
+            if i >= 7 or idx == 7 and i >= 5:
                 decoded = (
                     decoded[: 2 * (i - 6) + 2]
                     + [
