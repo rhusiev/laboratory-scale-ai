@@ -154,7 +154,7 @@ def evaluate_hf_model_aime(
         question = data[idx][question_column]
         ground_truth = str(data[idx][answer_column])
 
-        i = 1
+        i = 0
         prompt = template + [
             {
                 "role": "user",
