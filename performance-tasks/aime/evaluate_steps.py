@@ -222,7 +222,7 @@ def evaluate_hf_model_aime(
                     .choices[0]
                     .message.content
                 )
-                if response.lower() == "yes":
+                if response.lower().startswith("yes"):
                     correct_steps += 1
                     print("===Correct reasoning step:===")
                 else:
