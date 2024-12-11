@@ -235,7 +235,7 @@ def evaluate_hf_model_aime(
                         }
                     ]
                     print("===Corrected reasoning step:===")
-                print(decoded[-1])
+                print(decoded[-1]["content"])
             if f"step{i}" not in data[idx] or data[idx][f"step{i}"] in [" ", "", None]:
                 break
             prompt = decoded + [
@@ -289,7 +289,7 @@ def evaluate_hf_model_aime(
                     }
                 ]
                 print("===Corrected last reasoning step:===")
-            print(decoded[-1].content)
+            print(decoded[-1]["content"])
         prompt = decoded + [
             {
                 "role": "user",
