@@ -153,6 +153,7 @@ def evaluate_hf_model_aime(
 
         i = 1
         prompt = template + [{"role": "user", "content": f"{question}\n\n# To work this out I would first do the following step\n\n{data[idx][f'step{i}']}\n\n# Your task\n\nDo this step, and I will give you the next instruction."}]
+        complete_chat = prompt
         while True:
             decoded = pipeline(
                 prompt,
@@ -161,16 +162,20 @@ def evaluate_hf_model_aime(
             i += 1
             if f"step{i}" not in data[idx] or data[idx][f"step{i}"] in [" ", "", None]:
                 break
+            complete_chat = complete_chat + decoded[-2:]
+            # to account for limited context size
+            if i >= 10:
+                decoded = decoded[:2*(i - 10) + 2] + [{"role": "assistant", "content": "I did some calculations I will use in the next step."}] + decoded[i - 9:]
             prompt = decoded + [{"role": "user", "content": f"# My next step would be\n\n{data[idx][f'step{i}']}\n\n# Your task\n\nDo this step, and I will give you the next instruction."}]
 
-        new_chat = decoded + [{"role": "user", "content": "What is the final answer?"}]
+        decoded = decoded + [{"role": "user", "content": "What is the final answer?"}]
         decoded = pipeline(
-            new_chat,
+            decoded,
             max_new_tokens=max_new_tokens,
         )[0]["generated_text"][-1]["content"]
 
         print("Chat")
-        print(new_chat)
+        print(complete_chat)
         print(f"{ground_truth = } -> {decoded = }")
 
         exact_match.append(compute_exact(decoded, ground_truth))
