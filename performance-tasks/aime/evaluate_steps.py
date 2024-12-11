@@ -150,7 +150,10 @@ def evaluate_hf_model_aime(
     exact_match: list[bool] = []
     substr_match: list[bool] = []
 
+    steps: list[list[str]] = []
+
     for idx in tqdm(range(min(max_samples, len(data))), desc="Evaluating AIME model"):
+        steps.append([])
         question = data[idx][question_column]
         ground_truth = str(data[idx][answer_column])
 
@@ -167,6 +170,7 @@ def evaluate_hf_model_aime(
                 prompt,
                 max_new_tokens=max_new_tokens,
             )[0]["generated_text"]
+            steps[-1].append(decoded[-1])
             i += 1
             # to account for limited context size
             if i >= 7:
@@ -214,6 +218,9 @@ def evaluate_hf_model_aime(
             print("Did not give the full chat to the model. Gave instead:")
             print(prompt)
         print(f"{ground_truth = } -> {decoded = }")
+
+        with open("steps.json", "w") as f:
+            json.dump(steps, f)
 
         exact_match.append(compute_exact(decoded, ground_truth))
         substr_match.append(normalize_answer(ground_truth) in normalize_answer(decoded))
@@ -378,7 +385,7 @@ if __name__ == "__main__":
     # Save the metrics to a JSON file
     model_id = args.model_id
     save_path = path.join(
-        args.save_dir, f'{model_id.replace("/", "-")}_aime_2024_i_metrics.json'
+        args.save_dir, f'{model_id.replace("/", "-")}_aime_2024_i_steps_metrics.json'
     )
     print("Saving AIME metrics to: ", save_path)
 
