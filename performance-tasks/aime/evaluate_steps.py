@@ -17,7 +17,10 @@ import re
 from typing import Optional
 
 template = [
-    {"role": "system", "content": "You are a mathematics assistant that helps solve AIME problems. First think through the problem step by step, then when asked for the final answer, respond only with the integer number between 0 and 1000, without any explanation."},
+    {
+        "role": "system",
+        "content": "You are a mathematics assistant that helps solve AIME problems. First think through the problem step by step, then when asked for the final answer, respond only with the integer number between 0 and 1000, without any explanation.",
+    },
 ]
 
 #####
@@ -152,7 +155,12 @@ def evaluate_hf_model_aime(
         ground_truth = str(data[idx][answer_column])
 
         i = 1
-        prompt = template + [{"role": "user", "content": f"{question}\n\n# To work this out I would first do the following step\n\n{data[idx][f'step{i}']}\n\n# Your task\n\nDo this step, and I will give you the next instruction."}]
+        prompt = template + [
+            {
+                "role": "user",
+                "content": f"{question}\n\n# To work this out I would first do the following step\n\n{data[idx][f'step{i}']}\n\n# Your task\n\nDo this step, and I will give you the next instruction.",
+            }
+        ]
         complete_chat = prompt
         while True:
             decoded = pipeline(
@@ -160,17 +168,42 @@ def evaluate_hf_model_aime(
                 max_new_tokens=max_new_tokens,
             )[0]["generated_text"]
             i += 1
+            # to account for limited context size
+            if i >= 7:
+                decoded = (
+                    decoded[: 2 * (i - 7) + 2]
+                    + [
+                        {
+                            "role": "assistant",
+                            "content": "I did some calculations I will use in the next step.",
+                        }
+                    ]
+                    + decoded[i - 9 :]
+                )
             if f"step{i}" not in data[idx] or data[idx][f"step{i}"] in [" ", "", None]:
                 break
             complete_chat = complete_chat + decoded[-2:]
-            # to account for limited context size
-            if i >= 10:
-                decoded = decoded[:2*(i - 10) + 2] + [{"role": "assistant", "content": "I did some calculations I will use in the next step."}] + decoded[i - 9:]
-            prompt = decoded + [{"role": "user", "content": f"# My next step would be\n\n{data[idx][f'step{i}']}\n\n# Your task\n\nDo this step, and I will give you the next instruction."}]
+            prompt = decoded + [
+                {
+                    "role": "user",
+                    "content": f"# My next step would be\n\n{data[idx][f'step{i}']}\n\n# Your task\n\nDo this step, and I will give you the next instruction.",
+                }
+            ]
 
-        decoded = decoded + [{"role": "user", "content": "What is the final answer?"}]
+        prompt = decoded + [
+            {
+                "role": "user",
+                "content": "# These were all the steps I had\n\n## Thinkg about the final answer.",
+            }
+        ]
         decoded = pipeline(
-            decoded,
+            prompt,
+            max_new_tokens=max_new_tokens,
+        )[0]["generated_text"]
+        prompt = decoded + [{"role": "user", "content": "What is the final answer? Give me a single number."}]
+        complete_chat = complete_chat + [prompt[-1]]
+        decoded = pipeline(
+            prompt,
             max_new_tokens=max_new_tokens,
         )[0]["generated_text"][-1]["content"]
 
@@ -297,14 +330,16 @@ if __name__ == "__main__":
         model_id = args.model_id
         print("Loading Hugging Face model: ", model_id)
         model, _ = FastLanguageModel.from_pretrained(
-            model_name = model_id,
-            dtype = None, # autodetect
-            load_in_4bit = True,
+            model_name=model_id,
+            dtype=None,  # autodetect
+            load_in_4bit=True,
         )
-        tokenizer = AutoTokenizer.from_pretrained("unsloth/llama-3-8b-Instruct-bnb-4bit") # hardcode
+        tokenizer = AutoTokenizer.from_pretrained(
+            "unsloth/llama-3-8b-Instruct-bnb-4bit"
+        )  # hardcode
         tokenizer = get_chat_template(
             tokenizer,
-            chat_template = "llama-3",
+            chat_template="llama-3",
             # mapping={"role" : "from", "content" : "value", "user" : "human", "assistant" : "gpt"}
         )
         FastLanguageModel.for_inference(model)
