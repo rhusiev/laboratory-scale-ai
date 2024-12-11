@@ -190,7 +190,7 @@ def evaluate_hf_model_aime(
                 max_new_tokens=max_new_tokens,
             )[0]["generated_text"]
             last_line = decoded[-1]["content"].split("\n")[-1].strip()
-            if "last step?" in last_line.lower():
+            if "step?" in last_line.lower():
                 decoded[-1]["content"] = decoded[-1]["content"][
                     : max(
                         decoded[-1]["content"].rfind("."),
