@@ -137,7 +137,6 @@ def evaluate_hf_model_aime(
     data: Sequence[dict[str, str]],
     question_column: str = "input",
     answer_column: str = "output",
-    final_answer_column: str = "",
     max_new_tokens: int = 4096,
     max_samples: int = None,
     remove_suffix: str = None,
@@ -286,8 +285,6 @@ if __name__ == "__main__":
             data,
             question_column="question",
             answer_column="answer",
-            logic_column="full-o1-preview",
-            final_answer_column="with-answer",
             max_new_tokens=args.max_new_tokens,
             max_samples=args.max_samples,
         )
@@ -320,8 +317,6 @@ if __name__ == "__main__":
             data,
             question_column="question",
             answer_column="answer",
-            logic_column="full-o1-preview",
-            final_answer_column="with-answer",
             max_new_tokens=args.max_new_tokens,
             max_samples=args.max_samples,
         )
