@@ -200,6 +200,7 @@ def evaluate_hf_model_aime(
             prompt,
             max_new_tokens=max_new_tokens,
         )[0]["generated_text"]
+        complete_chat = complete_chat + decoded[-2:]
         prompt = decoded + [{"role": "user", "content": "What is the final answer? Give me a single number."}]
         complete_chat = complete_chat + [prompt[-1]]
         decoded = pipeline(
