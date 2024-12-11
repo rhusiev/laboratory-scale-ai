@@ -151,7 +151,7 @@ def evaluate_hf_model_aime(
         question = data[idx][question_column]
         ground_truth = str(data[idx][answer_column])
 
-        i = 0
+        i = 1
         prompt = template + [{"role": "user", "content": f"{question}\n\n# To work this out I would first do the following step\n\n{data[idx][f'step{i}']}\n\n# Your task\n\nDo this step, and I will give you the next instruction."}]
         while True:
             decoded = pipeline(
