@@ -234,7 +234,9 @@ def evaluate_hf_model_aime(
                         }
                     ]
                     print("===Corrected reasoning step:===")
-                print(decoded[-1]["content"].replace("\n\n", "\n"))
+            else:
+                print("===Reasoning step:===")
+            print(decoded[-1]["content"].replace("\n\n", "\n"))
             # to account for limited context size
             if i >= 3:
                 decoded = (
@@ -283,7 +285,7 @@ def evaluate_hf_model_aime(
             )
             response = (
                 client.chat.completions.create(
-                    model="gpt-4o",
+                    model="o1-preview",
                     messages=eval_prompt,
                 )
                 .choices[0]
