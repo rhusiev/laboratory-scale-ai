@@ -198,19 +198,6 @@ def evaluate_hf_model_aime(
                     )
                 ]
             steps[-1].append(decoded[-1])
-            i += 1
-            # to account for limited context size
-            if i >= 3:
-                decoded = (
-                    decoded[: 2 * (i - 6) + 2]
-                    + [
-                        {
-                            "role": "assistant",
-                            "content": "I did some calculations I will use in the next step.",
-                        }
-                    ]
-                    + decoded[2 * (i - 6) + 3 :]
-                )
             if eval_each_step:
                 eval_prompt = (
                     [eval_template]
@@ -244,6 +231,20 @@ def evaluate_hf_model_aime(
                     ]
                     print("===Corrected reasoning step:===")
                 print(decoded[-1]["content"].replace("\n\n", "\n"))
+            i += 1
+            # to account for limited context size
+            if i >= 3:
+                decoded = (
+                    decoded[: 2 * (i - 3) + 2]
+                    + [
+                        {
+                            "role": "assistant",
+                            "content": "I did some calculations I will use in the next step.",
+                        }
+                    ]
+                    + decoded[2 * (i - 3) + 3 :]
+                )
+            
             if f"step{i}" not in data[idx] or data[idx][f"step{i}"] in [" ", "", None]:
                 break
             prompt = decoded + [
