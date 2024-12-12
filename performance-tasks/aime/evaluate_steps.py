@@ -154,7 +154,7 @@ def evaluate_hf_model_aime(
     data: Sequence[dict[str, str]],
     question_column: str = "input",
     answer_column: str = "output",
-    max_new_tokens: int = 4096,
+    max_new_tokens: int = 3072,
     max_samples: int = None,
     remove_suffix: str = None,
     eval_each_step: bool = False,
@@ -366,7 +366,7 @@ if __name__ == "__main__":
         "--max_new_tokens",
         type=int,
         help="The maximum number of tokens to generate",
-        default=4096,
+        default=3072,
     )
     parser.add_argument(
         "--remove_suffix",
