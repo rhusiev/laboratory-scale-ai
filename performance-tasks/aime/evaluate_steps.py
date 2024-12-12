@@ -218,6 +218,9 @@ def evaluate_hf_model_aime(
                     .choices[0]
                     .message.content
                 )
+                first_line = response[: response.find("\n")].strip().lower()
+                if "incorrect" in first_line or "wrong" in first_line or "corrected" in first_line:
+                    response = response[response.find("\n") + 1 :]
                 if response.lower().startswith("yes"):
                     correct_steps += 1
                     print("===Correct reasoning step:===")
