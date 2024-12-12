@@ -180,7 +180,7 @@ def evaluate_hf_model_aime(
         prompt = template + [
             {
                 "role": "user",
-                "content": f"{question}\n\n# To work this out I first need to do the following step\n\n{data[idx]['step1']}\n\n# Your task\n\nDo this step, and I will give you the next instruction.",
+                "content": f"{question}\n\n# To work this out I first need to do the following step\n\n{data[idx]['step1']}\n\n# Your task\n\nDo this step, and I will give you the next step.",
             }
         ]
         while True:
@@ -256,7 +256,7 @@ def evaluate_hf_model_aime(
             prompt = decoded + [
                 {
                     "role": "user",
-                    "content": f"# The next step I should do is\n\n{data[idx][f'step{i}']}\n\n# Your task\n\nDo this step, and I will give you the next instruction.",
+                    "content": f"# The next step I should do is\n\n{data[idx][f'step{i}']}\n\n# Your task\n\nDo this step, and I will give you the next step.",
                 }
             ]
 
