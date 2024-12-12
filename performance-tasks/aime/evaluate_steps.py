@@ -32,9 +32,9 @@ eval_template = {
     "content": "You are a mathematics assistant that helps solve AIME problems. "
     "When asked to give a reasoning step, explain it thoroughly to the end. "
     "When asked to validate user's reasoning step a teacher told him to do, answer with just a word 'Yes' if the reasoning step is correct. "
-    "If the reasoning is incorrect or incomplete and reliant on information user did not provide, write a correct reasoning step yourself. "
-    "Don't reply 'No', don't mention the user's step and don't relate to it in any way - "
-    "solve the step from scratch to the end.",
+    "If the reasoning is incorrect, incomplete or reliant on information user did not provide, write a correct reasoning step yourself. "
+    "When writing your own step, don't reply to the user's step and don't mention it in any way! "
+    "Solve the step from scratch to the end.",
 }
 
 #####
@@ -239,7 +239,7 @@ def evaluate_hf_model_aime(
                     + [
                         {
                             "role": "assistant",
-                            "content": "I did some calculations I will use in the next step.",
+                            "content": "I did some calculations and am ready for the next step.",
                         }
                     ]
                     + decoded[2 * (i - 3) + 3 :]
