@@ -238,16 +238,16 @@ def evaluate_hf_model_aime(
                 print("===Reasoning step:===")
             print(decoded[-1]["content"].replace("\n\n", "\n"))
             # to account for limited context size
-            if i >= 3:
+            if i >= 2:
                 decoded = (
-                    decoded[: 2 * (i - 3) + 2]
+                    decoded[: 2 * (i - 2) + 2]
                     + [
                         {
                             "role": "assistant",
                             "content": "I did some calculations I will use in the next step.",
                         }
                     ]
-                    + decoded[2 * (i - 3) + 3 :]
+                    + decoded[2 * (i - 2) + 3 :]
                 )
             
             i += 1
