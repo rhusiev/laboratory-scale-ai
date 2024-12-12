@@ -30,10 +30,10 @@ template = [
 eval_template = {
     "role": "system",
     "content": "You are a mathematics assistant that helps solve AIME problems. "
-    "When asked to give a reasoning step, explain it thoroughly. "
-    "When asked to validate user's reasoning step, answer with just a word 'Yes' if the reasoning step is correct. "
-    "Otherwise write a correct reasoning step yourself, without replying 'No', mentioning the user's step and withoutt relating to it in any way - "
-    "solve the step from scratch.",
+    "When asked to give a reasoning step, explain it thoroughly to the end. "
+    "When asked to validate user's reasoning step a teacher told him to do, answer with just a word 'Yes' if the reasoning step is correct. "
+    "Otherwise write a correct reasoning step yourself, without replying 'No', mentioning the user's step and without relating to it in any way - "
+    "solve the step from scratch to the end.",
 }
 
 #####
@@ -179,7 +179,7 @@ def evaluate_hf_model_aime(
         prompt = template + [
             {
                 "role": "user",
-                "content": f"{question}\n\n# To work this out I would first do the following step\n\n{data[idx]['step1']}\n\n# Your task\n\nDo this step, and I will give you the next instruction.",
+                "content": f"{question}\n\n# To work this out I first need to do the following step\n\n{data[idx]['step1']}\n\n# Your task\n\nDo this step, and I will give you the next instruction.",
             }
         ]
         while True:
@@ -205,7 +205,7 @@ def evaluate_hf_model_aime(
                     + [
                         {
                             "role": "user",
-                            "content": f"# I think of doing the following reasoning step\n\n{data[idx][f'step{i}']}\n\n# Here is my thought process of completing the step\n\n{decoded[-1]['content']}\n\n# Your task\n\nCheck whether my reasoning step is correct.",
+                            "content": f"# The next step I should do is\n\n{data[idx][f'step{i}']}\n\n# Here is my thought process of completing the step\n\n{decoded[-1]['content']}\n\n# Your task\n\nCheck whether my reasoning step is correct.",
                         }
                     ]
                 )
