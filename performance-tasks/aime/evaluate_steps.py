@@ -503,7 +503,7 @@ if __name__ == "__main__":
     # Save the metrics to a JSON file
     model_id = args.model_id
     save_path = path.join(
-        args.save_dir, f'{model_id.replace("/", "-")}_aime_2024_i_steps_metrics.json'
+        args.save_dir, f'{model_id.replace("/", "-")}_aime_2024_i_steps_eval-{eval_each_step}_metrics.json'
     )
     print("Saving AIME metrics to: ", save_path)
 
