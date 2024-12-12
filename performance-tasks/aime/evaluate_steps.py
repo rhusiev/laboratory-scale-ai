@@ -175,7 +175,7 @@ def evaluate_hf_model_aime(
         question = data[idx][question_column]
         ground_truth = str(data[idx][answer_column])
 
-        i = 0
+        i = 1
         prompt = template + [
             {
                 "role": "user",
@@ -231,7 +231,6 @@ def evaluate_hf_model_aime(
                     ]
                     print("===Corrected reasoning step:===")
                 print(decoded[-1]["content"].replace("\n\n", "\n"))
-            i += 1
             # to account for limited context size
             if i >= 3:
                 decoded = (
@@ -245,6 +244,7 @@ def evaluate_hf_model_aime(
                     + decoded[2 * (i - 3) + 3 :]
                 )
             
+            i += 1
             if f"step{i}" not in data[idx] or data[idx][f"step{i}"] in [" ", "", None]:
                 break
             prompt = decoded + [
