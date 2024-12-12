@@ -250,7 +250,7 @@ def evaluate_hf_model_aime(
             prompt = decoded + [
                 {
                     "role": "user",
-                    "content": f"# My next step would be\n\n{data[idx][f'step{i}']}\n\n# Your task\n\nDo this step, and I will give you the next instruction.",
+                    "content": f"# The next step I should do is\n\n{data[idx][f'step{i}']}\n\n# Your task\n\nDo this step, and I will give you the next instruction.",
                 }
             ]
 
