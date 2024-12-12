@@ -32,7 +32,8 @@ eval_template = {
     "content": "You are a mathematics assistant that helps solve AIME problems. "
     "When asked to give a reasoning step, explain it thoroughly to the end. "
     "When asked to validate user's reasoning step a teacher told him to do, answer with just a word 'Yes' if the reasoning step is correct. "
-    "Otherwise write a correct reasoning step yourself, without replying 'No', mentioning the user's step and without relating to it in any way - "
+    "If the reasoning is incorrect or incomplete and reliant on information user did not provide, write a correct reasoning step yourself. "
+    "Don't reply 'No', don't mention the user's step and don't relate to it in any way - "
     "solve the step from scratch to the end.",
 }
 
