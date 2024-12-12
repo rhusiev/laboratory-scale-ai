@@ -23,16 +23,16 @@ from typing import Optional
 template = [
     {
         "role": "system",
-        "content": "You are a mathematics assistant that helps solve AIME problems. First think through the problem step by step, then when asked for the final answer, respond only with the integer number between 0 and 1000, without any explanation.",
+        "content": "You are a mathematics assistant that helps solve AIME problems. Think through the problem step by step, knowing that the final answer is an integer number between 0 and 1000.",
     },
 ]
 
 eval_template = {
     "role": "system",
-    "content": "You are a mathematics assistant that helps solve AIME problems. "
-    "When asked to give a reasoning step, explain it thoroughly to the end. "
-    "When asked to validate user's reasoning step a teacher told him to do, answer with just a word 'Yes' if the reasoning step is correct. "
-    "If the reasoning is incorrect, incomplete or reliant on information user did not provide, write a correct reasoning step yourself. "
+    "content": "You are a mathematics assistant of a teacher that helps evaluate AIME problems written by students. "
+    "When asked by a teacher to give a reasoning step, explain it thoroughly to the end. "
+    "When asked to validate a reasoning step a teacher told the student to do, answer with just a word 'Yes' if the reasoning step is correct. "
+    "If the reasoning is incorrect, incomplete or reliant on information the student did not provide, write a correct reasoning step yourself. "
     "When writing your own step, don't reply to the user's step and don't mention it in any way! "
     "Solve the step from scratch to the end.",
 }
@@ -180,7 +180,7 @@ def evaluate_hf_model_aime(
         prompt = template + [
             {
                 "role": "user",
-                "content": f"{question}\n\n# To work this out I first need to do the following step\n\n{data[idx]['step1']}\n\n# Your task\n\nDo this step, and I will give you the next instruction.",
+                "content": f"{question}\n\n# The first step to do is the following\n\n{data[idx]['step1']}\n\n# Your task\n\nDo this step, and I will give you the next step.",
             }
         ]
         while True:
@@ -206,7 +206,7 @@ def evaluate_hf_model_aime(
                     + [
                         {
                             "role": "user",
-                            "content": f"# The next step I should do is\n\n{data[idx][f'step{i}']}\n\n# Here is my thought process of completing the step\n\n{decoded[-1]['content']}\n\n# Your task\n\nCheck whether my reasoning step is correct.",
+                            "content": f"# The next step the student had to do is\n\n{data[idx][f'step{i}']}\n\n# Here is his thought process of completing the step\n\n{decoded[-1]['content']}\n\n# Your task\n\nCheck whether his reasoning step is correct, complete and well described.",
                         }
                     ]
                 )
@@ -251,14 +251,14 @@ def evaluate_hf_model_aime(
             prompt = decoded + [
                 {
                     "role": "user",
-                    "content": f"# The next step I should do is\n\n{data[idx][f'step{i}']}\n\n# Your task\n\nDo this step, and I will give you the next instruction.",
+                    "content": f"# The next step to do is\n\n{data[idx][f'step{i}']}\n\n# Your task\n\nDo this step, and I will give you the next one.",
                 }
             ]
 
         prompt = decoded + [
             {
                 "role": "user",
-                "content": "# These were all the steps I had\n\n## Think about the final answer.",
+                "content": "# These were all the steps the teacher gave\n\n## Think about the final answer.",
             }
         ]
         print("===User===")
@@ -274,7 +274,7 @@ def evaluate_hf_model_aime(
                 + [
                     {
                         "role": "user",
-                        "content": f"# I think of doing the following last reasoning step thought process\n\n{decoded[-1]['content']}\n\n# Your task\n\nCheck whether my last reasoning step is correct. If it is not, provide your reasoning step without any relation to mine. Otherwise reply with 'Yes'",
+                        "content": f"# The student's last reasoning step thought process\n\n{decoded[-1]['content']}\n\n# Your task\n\nCheck whether his last reasoning step is correct.",
                     }
                 ]
             )
