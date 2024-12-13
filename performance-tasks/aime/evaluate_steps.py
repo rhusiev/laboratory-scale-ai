@@ -212,7 +212,7 @@ def evaluate_hf_model_aime(
                 )
                 response = (
                     client.chat.completions.create(
-                        model="gpt-4o",
+                        model="o1-preview",
                         messages=eval_prompt,
                     )
                     .choices[0]
