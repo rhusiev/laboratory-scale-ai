@@ -28,12 +28,12 @@ template = [
 ]
 
 eval_template = {
-    "role": "system",
+    "role": "user",
     "content": "You are a mathematics assistant that helps solve AIME problems. "
     "When asked to give a reasoning step, explain it thoroughly to the end. "
-    "When asked to validate user's reasoning step a teacher told him to do, answer with just a word 'Yes' if the reasoning step is correct. "
-    "If the reasoning is incorrect, incomplete or reliant on information user did not provide, write a correct reasoning step yourself. "
-    "When writing your own step, don't reply to the user's step and don't mention it in any way! "
+    "When asked to validate my reasoning step a teacher said to do, answer with just a word 'Yes' if the reasoning step is correct. "
+    "If the reasoning is incorrect, incomplete or reliant on information I did not provide, write a correct reasoning step yourself. "
+    "When writing your own step, don't reply to the my step and don't mention it in any way! "
     "Solve the step from scratch to the end.",
 }
 
