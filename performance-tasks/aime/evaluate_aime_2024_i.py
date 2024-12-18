@@ -207,7 +207,7 @@ def evaluate_hf_model_aime(
     answer_column: str = "output",
     logic_column: str = "",
     final_answer_column: str = "",
-    max_new_tokens: int = 4096,
+    max_new_tokens: int = 3000,
     max_samples: int = None,
     remove_suffix: str = None,
 ) -> dict:
