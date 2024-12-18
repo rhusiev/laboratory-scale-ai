@@ -286,7 +286,7 @@ if __name__ == "__main__":
         "--max_new_tokens",
         type=int,
         help="The maximum number of tokens to generate",
-        default=4096,
+        default=3000,
     )
     parser.add_argument(
         "--remove_suffix",
