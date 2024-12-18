@@ -241,10 +241,13 @@ def evaluate_hf_model_aime(
             decoded = prompt[:-1]
 
         new_chat = decoded + [{"role": "user", "content": "What is the final answer?"}]
-        decoded = pipeline(
-            new_chat,
-            max_new_tokens=max_new_tokens,
-        )[0]["generated_text"][-1]["content"]
+        try:
+            decoded = pipeline(
+                new_chat,
+                max_new_tokens=max_new_tokens,
+            )[0]["generated_text"][-1]["content"]
+        except ValueError:
+            decoded = ""
 
         print("Chat")
         print(new_chat)
