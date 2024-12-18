@@ -172,6 +172,9 @@ def evaluate_hf_model_aime(
         correct_steps = 0
 
     for idx in tqdm(range(min(max_samples, len(data))), desc="Evaluating AIME model"):
+        O1_PREVIEW_CORRECTLY_ANSWERED = (0, 1, 2, 3, 4, 5, 6, 8, 14)
+        if idx not in O1_PREVIEW_CORRECTLY_ANSWERED:
+            continue
         steps.append([])
         question = data[idx][question_column]
         ground_truth = str(data[idx][answer_column])
