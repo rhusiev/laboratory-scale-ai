@@ -19,7 +19,21 @@ from typing import Optional
 template = [
     # from aime 2018 I
     {"role": "system", "content": "You are a mathematics assistant that helps solve AIME problems. First think through the problem step by step, then when asked for the final answer, respond only with the integer number between 0 and 1000, without any explanation."},
-    {"role": "user", "content": """Let $S$ be the number of ordered pairs of integers $(a,b)$ with $1 \\leq a \\leq 100$ and $b \\geq 0$ such that the polynomial $x^2+ax+b$ can be factored into the product of two (not necessarily distinct) linear factors with integer coefficients. Find the remainder when $S$ is divided by $1000$.
+    {"role": "user", "content": """Let $S$ be the number of ordered pairs of integers $(a,b)$ with $1 \\leq a \\leq 100$ and $b \\geq 0$ such that the polynomial $x^2+ax+b$ can be factored into the product of two (not necessarily distinct) linear factors with integer coefficients. Find the remainder when $S$ is divided by $1000$."""},
+    {"role": "assistant", "content": r"""Notice that for $x^2+ax+b$ to be true, for every $a$, $b$ will always be the product of the possibilities of how to add two integers to $a$. For example, if $a=3$, $b$ will be the product of $(3,0)$ and $(2,1)$, as those two sets are the only possibilities of adding two integers to $a$. Note that order does not matter. If we just do some simple casework, we find out that:
+
+if $a$ is odd, there will always be $\left\lceil\frac{a}{2}\right\rceil$ $\left(\text{which is also }\frac{a+1}{2}\right)$ possibilities of adding two integers to $a$.
+
+if $a$ is even, there will always be $\frac{a}{2}+1$ possibilities of adding two integers to $a$.
+
+Using the casework, we have $1+2+2+3+3+...50+50+51$ possibilities. This will mean that the answer is \[\frac{(1+51)\cdot100}{2}\Rightarrow52\cdot50=2600\] possibilities.
+
+Thus, our solution is $2600\bmod {1000}\equiv 600$."""},
+    {"role": "user", "content": "What is the final answer?"},
+    {"role": "assistant", "content": "600"},
+]
+
+template_to_add_logic = """
 
 # To work this out I would do the following steps
 
@@ -63,19 +77,7 @@ Once I have the total count, I apply the modulo operation to find the remainder 
 
 # Your task
 
-Now do these steps and solve the problem."""},
-    {"role": "assistant", "content": r"""Notice that for $x^2+ax+b$ to be true, for every $a$, $b$ will always be the product of the possibilities of how to add two integers to $a$. For example, if $a=3$, $b$ will be the product of $(3,0)$ and $(2,1)$, as those two sets are the only possibilities of adding two integers to $a$. Note that order does not matter. If we just do some simple casework, we find out that:
-
-if $a$ is odd, there will always be $\left\lceil\frac{a}{2}\right\rceil$ $\left(\text{which is also }\frac{a+1}{2}\right)$ possibilities of adding two integers to $a$.
-
-if $a$ is even, there will always be $\frac{a}{2}+1$ possibilities of adding two integers to $a$.
-
-Using the casework, we have $1+2+2+3+3+...50+50+51$ possibilities. This will mean that the answer is \[\frac{(1+51)\cdot100}{2}\Rightarrow52\cdot50=2600\] possibilities.
-
-Thus, our solution is $2600\bmod {1000}\equiv 600$."""},
-    {"role": "user", "content": "What is the final answer?"},
-    {"role": "assistant", "content": "600"},
-]
+Now do these steps and solve the problem."""
 
 #####
 # TODO: Below is partially adapted better answer parsing from
@@ -214,6 +216,7 @@ def evaluate_hf_model_aime(
         if logic_column == "" or data[idx][logic_column].strip() == "":
             prompt = template + [{"role": "user", "content": question}]
         else:
+            template[0]["content"] += template_to_add_logic
             prompt = template + [{"role": "user", "content": f"{question}\n\n# To work this out I would do the following steps\n\n{data[idx][logic_column]}\n{data[idx][final_answer_column]}\n\n# Your task\n\nNow do these steps and solve the problem."}]
         decoded = pipeline(
             prompt,
@@ -307,6 +310,20 @@ if __name__ == "__main__":
         help="Name of the WandB API key variable name.",
     )
 
+    # logic column, final answer column
+    parser.add_argument(
+        "--logic_column",
+        type=str,
+        help="The column containing the logic",
+        default="",
+    )
+    parser.add_argument(
+        "--final_answer_column",
+        type=str,
+        help="The column containing the final answer",
+        default="",
+    )
+
     # few-shot learning?
     parser.add_argument(
         "--few_shot",
@@ -353,8 +370,8 @@ if __name__ == "__main__":
             data,
             question_column="question",
             answer_column="answer",
-            logic_column="full-o1-preview",
-            final_answer_column="with-answer",
+            logic_column=args.logic_column,
+            final_answer_column=args.final_answer_column,
             max_new_tokens=args.max_new_tokens,
             max_samples=args.max_samples,
         )
@@ -387,8 +404,8 @@ if __name__ == "__main__":
             data,
             question_column="question",
             answer_column="answer",
-            logic_column="full-o1-preview",
-            final_answer_column="with-answer",
+            logic_column=args.logic_column,
+            final_answer_column=args.final_answer_column,
             max_new_tokens=args.max_new_tokens,
             max_samples=args.max_samples,
         )
