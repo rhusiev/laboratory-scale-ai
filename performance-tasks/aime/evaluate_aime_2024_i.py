@@ -207,7 +207,7 @@ def evaluate_hf_model_aime(
     answer_column: str = "output",
     logic_column: str = "",
     final_answer_column: str = "",
-    max_new_tokens: int = 1500,
+    max_new_tokens: int = 2000,
     max_samples: int = None,
     remove_suffix: str = None,
 ) -> dict:
@@ -232,10 +232,13 @@ def evaluate_hf_model_aime(
                     "content": f"{question}\n\n# To work this out I would do the following steps\n\n{data[idx][logic_column]}{('\n' + data[idx][final_answer_column]) if final_answer_column in data[idx] else ''}\n\n# Your task\n\nNow do these steps and solve the problem.",
                 }
             ]
-        decoded = pipeline(
-            prompt,
-            max_new_tokens=max_new_tokens,
-        )[0]["generated_text"]
+        try:
+            decoded = pipeline(
+                prompt,
+                max_new_tokens=max_new_tokens,
+            )[0]["generated_text"]
+        except ValueError:
+            decoded = prompt[:-1]
 
         new_chat = decoded + [{"role": "user", "content": "What is the final answer?"}]
         decoded = pipeline(
@@ -286,7 +289,7 @@ if __name__ == "__main__":
         "--max_new_tokens",
         type=int,
         help="The maximum number of tokens to generate",
-        default=1500,
+        default=2000,
     )
     parser.add_argument(
         "--remove_suffix",
