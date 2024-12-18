@@ -18,9 +18,17 @@ from typing import Optional
 
 template = [
     # from aime 2018 I
-    {"role": "system", "content": "You are a mathematics assistant that helps solve AIME problems. First think through the problem step by step, then when asked for the final answer, respond only with the integer number between 0 and 1000, without any explanation."},
-    {"role": "user", "content": """Let $S$ be the number of ordered pairs of integers $(a,b)$ with $1 \\leq a \\leq 100$ and $b \\geq 0$ such that the polynomial $x^2+ax+b$ can be factored into the product of two (not necessarily distinct) linear factors with integer coefficients. Find the remainder when $S$ is divided by $1000$."""},
-    {"role": "assistant", "content": r"""Notice that for $x^2+ax+b$ to be true, for every $a$, $b$ will always be the product of the possibilities of how to add two integers to $a$. For example, if $a=3$, $b$ will be the product of $(3,0)$ and $(2,1)$, as those two sets are the only possibilities of adding two integers to $a$. Note that order does not matter. If we just do some simple casework, we find out that:
+    {
+        "role": "system",
+        "content": "You are a mathematics assistant that helps solve AIME problems. First think through the problem step by step, then when asked for the final answer, respond only with the integer number between 0 and 1000, without any explanation.",
+    },
+    {
+        "role": "user",
+        "content": """Let $S$ be the number of ordered pairs of integers $(a,b)$ with $1 \\leq a \\leq 100$ and $b \\geq 0$ such that the polynomial $x^2+ax+b$ can be factored into the product of two (not necessarily distinct) linear factors with integer coefficients. Find the remainder when $S$ is divided by $1000$.""",
+    },
+    {
+        "role": "assistant",
+        "content": r"""Notice that for $x^2+ax+b$ to be true, for every $a$, $b$ will always be the product of the possibilities of how to add two integers to $a$. For example, if $a=3$, $b$ will be the product of $(3,0)$ and $(2,1)$, as those two sets are the only possibilities of adding two integers to $a$. Note that order does not matter. If we just do some simple casework, we find out that:
 
 if $a$ is odd, there will always be $\left\lceil\frac{a}{2}\right\rceil$ $\left(\text{which is also }\frac{a+1}{2}\right)$ possibilities of adding two integers to $a$.
 
@@ -28,7 +36,8 @@ if $a$ is even, there will always be $\frac{a}{2}+1$ possibilities of adding two
 
 Using the casework, we have $1+2+2+3+3+...50+50+51$ possibilities. This will mean that the answer is \[\frac{(1+51)\cdot100}{2}\Rightarrow52\cdot50=2600\] possibilities.
 
-Thus, our solution is $2600\bmod {1000}\equiv 600$."""},
+Thus, our solution is $2600\bmod {1000}\equiv 600$.""",
+    },
     {"role": "user", "content": "What is the final answer?"},
     {"role": "assistant", "content": "600"},
 ]
@@ -217,7 +226,12 @@ def evaluate_hf_model_aime(
             prompt = template + [{"role": "user", "content": question}]
         else:
             template[0]["content"] += template_to_add_logic
-            prompt = template + [{"role": "user", "content": f"{question}\n\n# To work this out I would do the following steps\n\n{data[idx][logic_column]}\n{data[idx][final_answer_column]}\n\n# Your task\n\nNow do these steps and solve the problem."}]
+            prompt = template + [
+                {
+                    "role": "user",
+                    "content": f"{question}\n\n# To work this out I would do the following steps\n\n{data[idx][logic_column]}\n{data[idx][final_answer_column]}\n\n# Your task\n\nNow do these steps and solve the problem.",
+                }
+            ]
         decoded = pipeline(
             prompt,
             max_new_tokens=max_new_tokens,
@@ -379,14 +393,16 @@ if __name__ == "__main__":
         model_id = args.model_id
         print("Loading Hugging Face model: ", model_id)
         model, _ = FastLanguageModel.from_pretrained(
-            model_name = model_id,
-            dtype = None, # autodetect
-            load_in_4bit = True,
+            model_name=model_id,
+            dtype=None,  # autodetect
+            load_in_4bit=True,
         )
-        tokenizer = AutoTokenizer.from_pretrained("unsloth/llama-3-8b-Instruct-bnb-4bit") # hardcode
+        tokenizer = AutoTokenizer.from_pretrained(
+            "unsloth/llama-3-8b-Instruct-bnb-4bit"
+        )  # hardcode
         tokenizer = get_chat_template(
             tokenizer,
-            chat_template = "llama-3",
+            chat_template="llama-3",
             # mapping={"role" : "from", "content" : "value", "user" : "human", "assistant" : "gpt"}
         )
         FastLanguageModel.for_inference(model)
@@ -423,7 +439,8 @@ if __name__ == "__main__":
     # Save the metrics to a JSON file
     model_id = args.model_id
     save_path = path.join(
-        args.save_dir, f'{model_id.replace("/", "-")}_aime_2024_i_metrics.json'
+        args.save_dir,
+        f'{model_id.replace("/", "-")}_aime-2024-i-{'logic' + args.logic_column if args.logic_column != '' else 'nologic'}-{"fewshot" if args.few_shot == "yes" else "0shot"}-{args.final_answer_column if args.final_answer_column != '' else 'noanswer'}.json',
     )
     print("Saving AIME metrics to: ", save_path)
 
